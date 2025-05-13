@@ -23,6 +23,7 @@
 
 /* Defines ------------------------------------------------------------------*/
 /* STMicroelectronics.X-CUBE-AZRTOS-H7RS.1.1.0 */
+NX_ETH_INTERFACE_ENABLED
 #define LAN8742
 #define THREADX_ENABLED
 #define NETXDUO_ENABLED

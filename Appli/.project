@@ -119,6 +119,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/Components/lan8742/lan8742.c</locationURI>
 		</link>
 		<link>
+			<name>Middlewares/Interfaces/Network/Ethernet Interface/nx_stm32_eth_driver.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Middlewares/ST/netxduo/common/drivers/ethernet/nx_stm32_eth_driver.c</locationURI>
+		</link>
+		<link>
 			<name>Middlewares/Interfaces/Network/Ethernet Phy Interface/LAN8742_Phy_Interface/nx_stm32_phy_driver.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Middlewares/ST/netxduo/common/drivers/ethernet/lan8742/nx_stm32_phy_driver.c</locationURI>
