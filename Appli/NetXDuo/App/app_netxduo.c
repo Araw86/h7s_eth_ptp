@@ -322,6 +322,7 @@ static VOID nx_app_thread_entry (ULONG thread_input)
 
 }
 /* USER CODE BEGIN 1 */
+  NX_PTP_TIME tm;
 /**
 * @brief  Main thread entry.
 * @param thread_input: ULONG user argument used by the thread entry
@@ -329,7 +330,6 @@ static VOID nx_app_thread_entry (ULONG thread_input)
 */
 static VOID App_Main_Thread_Entry(ULONG thread_input)
 {
-  NX_PTP_TIME tm;
   NX_PTP_DATE_TIME date;
 
 
@@ -354,7 +354,7 @@ static VOID App_Main_Thread_Entry(ULONG thread_input)
         nx_ptp_client_utility_convert_time_to_date(&tm, -ptp_utc_offset, &date);
 
         /* display the current time */
-        //printf("%2u/%02u/%u %02u:%02u:%02u.%09lu\r\n", date.day, date.month, date.year, date.hour, date.minute, date.second, date.nanosecond);
+       printf("%2u/%02u/%u %02u:%02u:%02u.%09lu\r\n", date.day, date.month, date.year, date.hour, date.minute, date.second, date.nanosecond);
 
         tx_thread_sleep(NX_IP_PERIODIC_RATE);
     }
