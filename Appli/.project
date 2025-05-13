@@ -104,6 +104,16 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Drivers/STM32H7RSxx_HAL_Driver/Src/stm32h7rsxx_hal_rcc_ex.c</locationURI>
 		</link>
 		<link>
+			<name>Drivers/STM32H7RSxx_HAL_Driver/stm32h7rsxx_hal_tim.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/STM32H7RSxx_HAL_Driver/Src/stm32h7rsxx_hal_tim.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/STM32H7RSxx_HAL_Driver/stm32h7rsxx_hal_tim_ex.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/STM32H7RSxx_HAL_Driver/Src/stm32h7rsxx_hal_tim_ex.c</locationURI>
+		</link>
+		<link>
 			<name>Drivers/BSP/Components/lan8742.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/Components/lan8742/lan8742.c</locationURI>

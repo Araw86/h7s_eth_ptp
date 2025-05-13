@@ -144,6 +144,14 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
 
+
+  .eth :
+  {
+  . = ALIGN(4);
+    *(.RxDescripSection); 
+    *(.TxDescripSection);
+  } >SRAMAHB
+  
   /* Used by the startup to initialize data */
   _sidata = LOADADDR(.data);
 

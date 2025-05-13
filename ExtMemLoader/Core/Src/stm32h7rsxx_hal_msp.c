@@ -66,7 +66,7 @@ RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 
   /* Configure the system Power Supply */
 
-  if (HAL_PWREx_ConfigSupply(PWR_DIRECT_SMPS_SUPPLY) != HAL_OK)
+  if (HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY) != HAL_OK)
   {
     /* Initialization error */
     Error_Handler();
