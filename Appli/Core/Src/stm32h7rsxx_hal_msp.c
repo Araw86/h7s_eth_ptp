@@ -87,7 +87,8 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef* heth)
   if(heth->Instance==ETH)
   {
     /* USER CODE BEGIN ETH_MspInit 0 */
-
+    LL_RCC_PLL1_SetS(6);
+    __HAL_RCC_PLL1CLKOUT_ENABLE(RCC_PLL_SCLK);
     /* USER CODE END ETH_MspInit 0 */
 
   /** Initializes the peripherals clock

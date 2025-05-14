@@ -265,9 +265,7 @@ VOID  nx_stm32_eth_driver(NX_IP_DRIVER *driver_req_ptr);
 
 #ifdef NX_DRIVER_ENABLE_PTP
 VOID  nx_driver_handle_ptp(NX_PACKET *release_packet);
-UINT  nx_driver_ptp_clock_callback(NX_PTP_CLIENT *client_ptr, UINT operation,
-                                             NX_PTP_TIME *time_ptr, NX_PACKET *packet_ptr,
-                                             VOID *callback_data);
+UINT  nx_driver_ptp_clock_callback(NX_PTP_CLIENT *client_ptr, UINT operation, NX_PTP_TIME *time_ptr, NX_PACKET *packet_ptr,VOID *callback_data);
 #endif /* NX_DRIVER_ENABLE_PTP */
 
 #ifdef MULTI_QUEUE_FEATURE
