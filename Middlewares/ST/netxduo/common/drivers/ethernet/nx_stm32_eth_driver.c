@@ -2536,6 +2536,7 @@ void HAL_ETH_TxCpltCallback(ETH_HandleTypeDef *heth)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
+UINT adjustTime=0;
 UINT  nx_driver_ptp_clock_callback(NX_PTP_CLIENT *client_ptr, UINT operation,
                                    NX_PTP_TIME *time_ptr, NX_PACKET *packet_ptr,
                                    VOID *callback_data)
@@ -2613,6 +2614,7 @@ UINT  nx_driver_ptp_clock_callback(NX_PTP_CLIENT *client_ptr, UINT operation,
     case NX_PTP_CLIENT_CLOCK_ADJUST:
       TX_DISABLE
       time_offset.Seconds = 0;
+      adjustTime=time_ptr->nanosecond;
       if(time_ptr->nanosecond < 0)
       {
         time_offset.NanoSeconds = - time_ptr->nanosecond;
