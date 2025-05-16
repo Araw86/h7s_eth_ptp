@@ -228,7 +228,7 @@ static VOID App_Main_Thread_Entry(ULONG thread_input)
     {
       ETH_PTP_ConfigTypeDef ptpconfig={
       .Timestamp = ENABLE,                             /*!< Timestamp during init to unlock 1588 */
-      .TimestampUpdateMode = DISABLE,                    /*!< Fine Timestamp Update selected */
+      .TimestampUpdateMode = ENABLE,                    /*!< Fine Timestamp Update selected */
       .TimestampInitialize = DISABLE,                   /*!< Initialize Timestamp, set when TS update is needed */
       .TimestampUpdate = DISABLE,                        /*!< Timestamp Update */
       .TimestampAddendUpdate = DISABLE,                  /*!< Timestamp Addend Update */
@@ -244,7 +244,7 @@ static VOID App_Main_Thread_Entry(ULONG thread_input)
       .TimestampFilter = DISABLE,                       /*!< Disable MAC Address for PTP Packet Filtering */
       .TimestampChecksumCorrection = DISABLE,           /*!< Do not enable checksum correction at the moment */
       .TimestampStatusMode = DISABLE,                   /*!< Transmit Timestamp Status Mode disabled */
-      .TimestampAddend = 1,          /*!< Timestamp addend value (1) */
+      .TimestampAddend = 0,          /*!< Timestamp addend value (1) */
       .TimestampSubsecondInc = 10<<16, /*!< Subsecond Increment for fine mode starting from 50MHz CLK */
       };
       HAL_ETH_PTP_SetConfig(&heth,&ptpconfig);

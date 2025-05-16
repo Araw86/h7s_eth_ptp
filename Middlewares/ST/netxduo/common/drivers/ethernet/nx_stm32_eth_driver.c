@@ -2548,7 +2548,7 @@ UINT  nx_driver_ptp_clock_callback(NX_PTP_CLIENT *client_ptr, UINT operation,
   uint32_t tickstart;
   UINT NX_PTP_Status =0;
   ETH_TimeTypeDef time_offset;
-
+  static uint64_t prev_ts_time = 0;
   NX_PARAMETER_NOT_USED(callback_data);
 
   switch (operation)
@@ -2579,7 +2579,7 @@ UINT  nx_driver_ptp_clock_callback(NX_PTP_CLIENT *client_ptr, UINT operation,
       time.Seconds = time_ptr -> second_low;
       time.NanoSeconds = time_ptr -> nanosecond;
       HAL_ETH_PTP_SetTime(&eth_handle, &time);
-
+      prev_ts_time =  client_ptr->nx_ptp_sync_ts.nanosecond | (uint64_t)client_ptr->nx_ptp_sync_ts.second_low<<32;
       TX_RESTORE
       break;
 
@@ -2616,6 +2616,14 @@ UINT  nx_driver_ptp_clock_callback(NX_PTP_CLIENT *client_ptr, UINT operation,
       TX_DISABLE
       time_offset.Seconds = 0;
       adjustTime=time_ptr->nanosecond;
+      #define REFERENCE 100000000 // 100MHz
+      uint64_t ts_this = client_ptr->nx_ptp_sync_ts.nanosecond | (uint64_t)client_ptr->nx_ptp_sync_ts.second_low<<32; 
+      uint64_t ts_sub = ts_this - prev_ts_time;
+      
+      
+
+      prev_ts_time = ts_this;
+
       if(time_ptr->nanosecond < 0)
       {
         time_offset.NanoSeconds = - time_ptr->nanosecond;
