@@ -82,7 +82,6 @@ TX_INTERRUPT_SAVE_AREA
 
     /* Disable interrupts.  */
     TX_DISABLE
-
     /* Setup the receive notify function pointer.  */
     socket_ptr -> nx_udp_receive_callback =  udp_receive_notify;
 

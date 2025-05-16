@@ -752,7 +752,6 @@ NX_PTP_CLIENT *client_ptr = (NX_PTP_CLIENT *)ptp_instance;
 static VOID _nx_ptp_client_socket_receive_notify(NX_UDP_SOCKET *socket_ptr)
 {
 NX_PTP_CLIENT *client_ptr = (NX_PTP_CLIENT *)(socket_ptr -> nx_udp_socket_reserved_ptr);
-
     /* set timer event */
     tx_event_flags_set(&(client_ptr -> nx_ptp_client_events), NX_PTP_CLIENT_RX_EVENT, TX_OR);
 }

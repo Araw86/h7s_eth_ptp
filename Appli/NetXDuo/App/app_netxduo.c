@@ -119,7 +119,8 @@ UINT MX_NetXDuo_Init(VOID *memory_ptr)
   /* USER CODE BEGIN 0 */
 
   printf("Nx_TCP_Echo_Client application started..\n");
-
+  /* Initialize the NetX system.  */
+  nx_system_initialize();
   /* Allocate the memory for packet_pool.  */
   if (tx_byte_allocate(byte_pool, (VOID **) &pointer,  NX_PACKET_POOL_SIZE, TX_NO_WAIT) != TX_SUCCESS)
   {
@@ -200,113 +201,6 @@ UINT MX_NetXDuo_Init(VOID *memory_ptr)
   }
   /* USER CODE END 0 */
 
-  /* Initialize the NetXDuo system. */
-  nx_system_initialize();
-
-    /* Allocate the memory for packet_pool.  */
-  if (tx_byte_allocate(byte_pool, (VOID **) &pointer, NX_APP_PACKET_POOL_SIZE, TX_NO_WAIT) != TX_SUCCESS)
-  {
-    return TX_POOL_ERROR;
-  }
-
-  /* Create the Packet pool to be used for packet allocation,
-   * If extra NX_PACKET are to be used the NX_APP_PACKET_POOL_SIZE should be increased
-   */
-  ret = nx_packet_pool_create(&NxAppPool, "NetXDuo App Pool", DEFAULT_PAYLOAD_SIZE, pointer, NX_APP_PACKET_POOL_SIZE);
-
-  if (ret != NX_SUCCESS)
-  {
-    return NX_POOL_ERROR;
-  }
-
-    /* Allocate the memory for Ip_Instance */
-  if (tx_byte_allocate(byte_pool, (VOID **) &pointer, Nx_IP_INSTANCE_THREAD_SIZE, TX_NO_WAIT) != TX_SUCCESS)
-  {
-    return TX_POOL_ERROR;
-  }
-
-   /* Create the main NX_IP instance */
-  ret = nx_ip_create(&NetXDuoEthIpInstance, "NetX Ip instance", NX_APP_DEFAULT_IP_ADDRESS, NX_APP_DEFAULT_NET_MASK, &NxAppPool, nx_stm32_eth_driver,
-                     pointer, Nx_IP_INSTANCE_THREAD_SIZE, NX_APP_INSTANCE_PRIORITY);
-
-  if (ret != NX_SUCCESS)
-  {
-    return NX_NOT_SUCCESSFUL;
-  }
-
-    /* Allocate the memory for ARP */
-  if (tx_byte_allocate(byte_pool, (VOID **) &pointer, DEFAULT_ARP_CACHE_SIZE, TX_NO_WAIT) != TX_SUCCESS)
-  {
-    return TX_POOL_ERROR;
-  }
-
-  /* Enable the ARP protocol and provide the ARP cache size for the IP instance */
-
-  /* USER CODE BEGIN ARP_Protocol_Initialization */
-
-  /* USER CODE END ARP_Protocol_Initialization */
-
-  ret = nx_arp_enable(&NetXDuoEthIpInstance, (VOID *)pointer, DEFAULT_ARP_CACHE_SIZE);
-
-  if (ret != NX_SUCCESS)
-  {
-    return NX_NOT_SUCCESSFUL;
-  }
-
-  /* Enable the ICMP */
-
-  /* USER CODE BEGIN ICMP_Protocol_Initialization */
-
-  /* USER CODE END ICMP_Protocol_Initialization */
-
-  ret = nx_icmp_enable(&NetXDuoEthIpInstance);
-
-  if (ret != NX_SUCCESS)
-  {
-    return NX_NOT_SUCCESSFUL;
-  }
-
-  /* Enable TCP Protocol */
-
-  /* USER CODE BEGIN TCP_Protocol_Initialization */
-
-  /* USER CODE END TCP_Protocol_Initialization */
-
-  ret = nx_tcp_enable(&NetXDuoEthIpInstance);
-
-  if (ret != NX_SUCCESS)
-  {
-    return NX_NOT_SUCCESSFUL;
-  }
-
-  /* Enable the UDP protocol required for  DHCP communication */
-
-  /* USER CODE BEGIN UDP_Protocol_Initialization */
-
-  /* USER CODE END UDP_Protocol_Initialization */
-
-  ret = nx_udp_enable(&NetXDuoEthIpInstance);
-
-  if (ret != NX_SUCCESS)
-  {
-    return NX_NOT_SUCCESSFUL;
-  }
-
-   /* Allocate the memory for main thread   */
-  if (tx_byte_allocate(byte_pool, (VOID **) &pointer, NX_APP_THREAD_STACK_SIZE, TX_NO_WAIT) != TX_SUCCESS)
-  {
-    return TX_POOL_ERROR;
-  }
-
-  /* Create the main thread */
-  ret = tx_thread_create(&NxAppThread, "NetXDuo App thread", nx_app_thread_entry , 0, pointer, NX_APP_THREAD_STACK_SIZE,
-                         NX_APP_THREAD_PRIORITY, NX_APP_THREAD_PRIORITY, TX_NO_TIME_SLICE, TX_AUTO_START);
-
-  if (ret != TX_SUCCESS)
-  {
-    return TX_THREAD_ERROR;
-  }
-
   /* USER CODE BEGIN MX_NetXDuo_Init */
 
   /* USER CODE END MX_NetXDuo_Init */
@@ -314,18 +208,6 @@ UINT MX_NetXDuo_Init(VOID *memory_ptr)
   return ret;
 }
 
-/**
-* @brief  Main thread entry.
-* @param thread_input: ULONG user argument used by the thread entry
-* @retval none
-*/
-static VOID nx_app_thread_entry (ULONG thread_input)
-{
-  /* USER CODE BEGIN Nx_App_Thread_Entry 0 */
-
-  /* USER CODE END Nx_App_Thread_Entry 0 */
-
-}
 /* USER CODE BEGIN 1 */
   NX_PTP_TIME tm;
 /**
@@ -345,6 +227,32 @@ static VOID App_Main_Thread_Entry(ULONG thread_input)
     ret = nx_ptp_client_create(&ptp_client, &IpInstance, 0, &AppPool,
                          PTP_THREAD_PRIORITY, (UCHAR *)ptp_stack, sizeof(ptp_stack),
                          CLOCK_CALLBACK, NX_NULL);
+
+/* init ptp HW on eth */
+    {
+      ETH_PTP_ConfigTypeDef ptpconfig={
+      .Timestamp = ENABLE,                             /*!< Timestamp during init to unlock 1588 */
+      .TimestampUpdateMode = DISABLE,                    /*!< Fine Timestamp Update selected */
+      .TimestampInitialize = DISABLE,                   /*!< Initialize Timestamp, set when TS update is needed */
+      .TimestampUpdate = DISABLE,                        /*!< Timestamp Update */
+      .TimestampAddendUpdate = DISABLE,                  /*!< Timestamp Addend Update */
+      .TimestampAll = DISABLE,                          /*!< Disable Timestamp for All Packets, see other settings below */
+      .TimestampRolloverMode = ENABLE,                  /*!< Binary Rollover Control selected */
+      .TimestampV2 = ENABLE,                            /*!< Enable PTP Packet Processing for Version 2 Format */
+      .TimestampEthernet = DISABLE,                     /*!< Select Processing of PTP over UDP Packets */
+      .TimestampIPv6 = ENABLE,                         /*!< Disable Processing of PTP Packets Sent over IPv6-UDP */
+      .TimestampIPv4 = ENABLE,                          /*!< Enable Processing of PTP Packets Sent over IPv4-UDP */
+      .TimestampEvent = DISABLE,                        /*!< Disable Timestamp Snapshot for Event Messages */
+      .TimestampMaster = DISABLE,                       /*!< Enable snapshot for Event Messages */
+      .TimestampSnapshots = 0x1,                          /*!< Select PTP packets for Taking Snapshots, Table 588 RM0399 */
+      .TimestampFilter = DISABLE,                       /*!< Disable MAC Address for PTP Packet Filtering */
+      .TimestampChecksumCorrection = DISABLE,           /*!< Do not enable checksum correction at the moment */
+      .TimestampStatusMode = DISABLE,                   /*!< Transmit Timestamp Status Mode disabled */
+      .TimestampAddend = 1,          /*!< Timestamp addend value (1) */
+      .TimestampSubsecondInc = 4<<16, /*!< Subsecond Increment for fine mode starting from 50MHz CLK */
+      };
+      HAL_ETH_PTP_SetConfig(&heth,&ptpconfig);
+    }
 
     /* start the PTP client */
     ret = nx_ptp_client_start(&ptp_client, NX_NULL, 0, 0, 0, ptp_event_callback, NX_NULL);
@@ -548,6 +456,7 @@ void HAL_ETH_TxPtpCallback(uint32_t *buff, ETH_TimeStampTypeDef *timestamp){
 
   // }
 }
+
 #endif
 #endif
 /* USER CODE END 1 */

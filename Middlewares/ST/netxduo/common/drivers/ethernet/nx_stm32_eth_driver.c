@@ -2062,6 +2062,14 @@ static UINT  _nx_driver_hardware_packet_send(NX_PACKET *packet_ptr)
   TxPacketCfg.ChecksumCtrl = ETH_CHECKSUM_DISABLE;
 #endif /* NX_ENABLE_INTERFACE_CAPABILITY */
 
+#ifdef NX_DRIVER_ENABLE_PTP
+  /* Enable PTP timestamp */
+  if (packet_ptr -> nx_packet_interface_capability_flag & NX_INTERFACE_CAPABILITY_PTP_TIMESTAMP)
+  {
+    HAL_ETH_PTP_InsertTxTimestamp(&eth_handle);
+  }
+#endif /* NX_DRIVER_ENABLE_PTP */
+
   TxPacketCfg.Length = buffLen;
   TxPacketCfg.TxBuffer = Txbuffer;
   TxPacketCfg.pData = (uint32_t *)packet_ptr;
@@ -2436,7 +2444,6 @@ static UINT _nx_driver_hardware_capability_set(NX_IP_DRIVER *driver_req_ptr)
   return NX_SUCCESS;
 }
 #endif /* NX_ENABLE_INTERFACE_CAPABILITY */
-
 
 void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *heth)
 {
