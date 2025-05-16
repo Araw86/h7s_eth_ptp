@@ -2445,6 +2445,7 @@ static UINT _nx_driver_hardware_capability_set(NX_IP_DRIVER *driver_req_ptr)
 }
 #endif /* NX_ENABLE_INTERFACE_CAPABILITY */
 
+
 void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *heth)
 {
 

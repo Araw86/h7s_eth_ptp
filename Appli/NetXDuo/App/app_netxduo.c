@@ -49,9 +49,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-TX_THREAD      NxAppThread;
-NX_PACKET_POOL NxAppPool;
-NX_IP          NetXDuoEthIpInstance;
 /* USER CODE BEGIN PV */
 static NX_PTP_CLIENT    ptp_client={0};
 /* Define the main thread.  */
@@ -76,7 +73,6 @@ UCHAR *pointer;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
-static VOID nx_app_thread_entry (ULONG thread_input);
 /* USER CODE BEGIN PFP */
 /* PTP handler.  */
 static UINT ptp_event_callback(NX_PTP_CLIENT *ptp_client_ptr, UINT event, VOID *event_data, VOID *callback_data);
@@ -111,9 +107,9 @@ UINT MX_NetXDuo_Init(VOID *memory_ptr)
 {
   UINT ret = NX_SUCCESS;
   TX_BYTE_POOL *byte_pool = (TX_BYTE_POOL*)memory_ptr;
-  CHAR *pointer;
 
   /* USER CODE BEGIN MX_NetXDuo_MEM_POOL */
+  CHAR *pointer;
   /* USER CODE END MX_NetXDuo_MEM_POOL */
 
   /* USER CODE BEGIN 0 */
