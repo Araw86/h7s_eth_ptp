@@ -9,7 +9,6 @@
 /*                                                                        */
 /**************************************************************************/
 
-
 /* Indicate that driver source is being compiled.  */
 
 #define NX_DRIVER_SOURCE
@@ -20,7 +19,7 @@
 
 /* Determine if the driver uses IP deferred processing or direct ISR processing.  */
 
-#define NX_DRIVER_ENABLE_DEFERRED                /* Define this to enable deferred ISR processing.  */
+#define NX_DRIVER_ENABLE_DEFERRED /* Define this to enable deferred ISR processing.  */
 
 /* Include driver specific include file.  */
 #include "nx_stm32_eth_driver.h"
@@ -32,67 +31,65 @@
 
 /****** DRIVER SPECIFIC ****** End of part/vendor specific include file area!  */
 
-
 /* Define the driver information structure that is only available within this file.  */
-static  NX_DRIVER_INFORMATION nx_driver_information;
+static NX_DRIVER_INFORMATION nx_driver_information;
 
 /* Rounded header size */
 static ULONG header_size;
 
-ETH_TxPacketConfigTypeDef  TxPacketCfg;
+ETH_TxPacketConfigTypeDef TxPacketCfg;
 ETH_MACFilterConfigTypeDef FilterConfig;
-USHORT                     packet_type;
+USHORT packet_type;
 
 #ifdef NX_DRIVER_ENABLE_PTP
 TIMESTAMP_CALLBACK timestamp_callback = NULL;
-#define HAL_PTP_TIMEOUT      0xFU
-#define PTP_REF_CLK          50000000UL
+#define HAL_PTP_TIMEOUT 0xFU
+#define PTP_REF_CLK 50000000UL
 #endif
 /****** DRIVER SPECIFIC ****** Start of part/vendor specific data area.  Include hardware-specific data here!  */
 
 /****** DRIVER SPECIFIC ****** End of part/vendor specific data area!  */
 
-
 /* Define the routines for processing each driver entry request.  The contents of these routines will change with
 each driver. However, the main driver entry function will not change, except for the entry function name.  */
 
-static VOID         _nx_driver_interface_attach(NX_IP_DRIVER *driver_req_ptr);
-static VOID         _nx_driver_initialize(NX_IP_DRIVER *driver_req_ptr);
-static VOID         _nx_driver_enable(NX_IP_DRIVER *driver_req_ptr);
-static VOID         _nx_driver_disable(NX_IP_DRIVER *driver_req_ptr);
-static VOID         _nx_driver_packet_send(NX_IP_DRIVER *driver_req_ptr);
-static VOID         _nx_driver_multicast_join(NX_IP_DRIVER *driver_req_ptr);
-static VOID         _nx_driver_multicast_leave(NX_IP_DRIVER *driver_req_ptr);
-static VOID         _nx_driver_get_status(NX_IP_DRIVER *driver_req_ptr);
+static VOID _nx_driver_interface_attach(NX_IP_DRIVER *driver_req_ptr);
+static VOID _nx_driver_initialize(NX_IP_DRIVER *driver_req_ptr);
+static VOID _nx_driver_enable(NX_IP_DRIVER *driver_req_ptr);
+static VOID _nx_driver_disable(NX_IP_DRIVER *driver_req_ptr);
+static VOID _nx_driver_packet_send(NX_IP_DRIVER *driver_req_ptr);
+static VOID _nx_driver_multicast_join(NX_IP_DRIVER *driver_req_ptr);
+static VOID _nx_driver_multicast_leave(NX_IP_DRIVER *driver_req_ptr);
+static VOID _nx_driver_get_status(NX_IP_DRIVER *driver_req_ptr);
 #ifdef NX_ENABLE_INTERFACE_CAPABILITY
-static VOID         _nx_driver_capability_get(NX_IP_DRIVER *driver_req_ptr);
-static VOID         _nx_driver_capability_set(NX_IP_DRIVER *driver_req_ptr);
+static VOID _nx_driver_capability_get(NX_IP_DRIVER *driver_req_ptr);
+static VOID _nx_driver_capability_set(NX_IP_DRIVER *driver_req_ptr);
 #endif /* NX_ENABLE_INTERFACE_CAPABILITY */
 
-static VOID         _nx_driver_deferred_processing(NX_IP_DRIVER *driver_req_ptr);
+static VOID _nx_driver_deferred_processing(NX_IP_DRIVER *driver_req_ptr);
 
 #ifdef NX_DRIVER_ENABLE_PTP
-static VOID         _nx_driver_transfer_to_netx(NX_IP *ip_ptr, NX_PACKET *packet_ptr, ULONG *ptp_ts_ptr);
+static VOID _nx_driver_transfer_to_netx(NX_IP *ip_ptr, NX_PACKET *packet_ptr, ULONG *ptp_ts_ptr);
 #else
-static VOID         _nx_driver_transfer_to_netx(NX_IP *ip_ptr, NX_PACKET *packet_ptr);
+static VOID _nx_driver_transfer_to_netx(NX_IP *ip_ptr, NX_PACKET *packet_ptr);
 #endif /* NX_DRIVER_ENABLE_PTP */
 
 /* Define the prototypes for the hardware implementation of this driver. The contents of these routines are
 driver-specific.  */
 
-static UINT         _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr);
-static UINT         _nx_driver_hardware_enable(NX_IP_DRIVER *driver_req_ptr);
-static UINT         _nx_driver_hardware_disable(NX_IP_DRIVER *driver_req_ptr);
-static UINT         _nx_driver_hardware_packet_send(NX_PACKET *packet_ptr);
+static UINT _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr);
+static UINT _nx_driver_hardware_enable(NX_IP_DRIVER *driver_req_ptr);
+static UINT _nx_driver_hardware_disable(NX_IP_DRIVER *driver_req_ptr);
+static UINT _nx_driver_hardware_packet_send(NX_PACKET *packet_ptr);
 #ifdef MULTI_QUEUE_FEATURE
-static UINT         _nx_driver_hardware_packet_send_distribute(NX_PACKET *packet_ptr, UINT queue_number);
+static UINT _nx_driver_hardware_packet_send_distribute(NX_PACKET *packet_ptr, UINT queue_number);
 #endif
-static UINT         _nx_driver_hardware_multicast_join(NX_IP_DRIVER *driver_req_ptr);
-static UINT         _nx_driver_hardware_multicast_leave(NX_IP_DRIVER *driver_req_ptr);
-static UINT         _nx_driver_hardware_get_status(NX_IP_DRIVER *driver_req_ptr);
-static VOID         _nx_driver_hardware_packet_received(VOID);
+static UINT _nx_driver_hardware_multicast_join(NX_IP_DRIVER *driver_req_ptr);
+static UINT _nx_driver_hardware_multicast_leave(NX_IP_DRIVER *driver_req_ptr);
+static UINT _nx_driver_hardware_get_status(NX_IP_DRIVER *driver_req_ptr);
+static VOID _nx_driver_hardware_packet_received(VOID);
 #ifdef NX_ENABLE_INTERFACE_CAPABILITY
-static UINT         _nx_driver_hardware_capability_set(NX_IP_DRIVER *driver_req_ptr);
+static UINT _nx_driver_hardware_capability_set(NX_IP_DRIVER *driver_req_ptr);
 #endif /* NX_ENABLE_INTERFACE_CAPABILITY */
 
 /**************************************************************************/
@@ -147,29 +144,29 @@ static UINT         _nx_driver_hardware_capability_set(NX_IP_DRIVER *driver_req_
 /*                                                                        */
 /**************************************************************************/
 /****** DRIVER SPECIFIC ****** Start of part/vendor specific global driver entry function name.  */
-VOID  nx_stm32_eth_driver(NX_IP_DRIVER *driver_req_ptr)
+VOID nx_stm32_eth_driver(NX_IP_DRIVER *driver_req_ptr)
 /****** DRIVER SPECIFIC ****** End of part/vendor specific global driver entry function name.  */
 {
 
 #ifdef NX_ENABLE_VLAN
-NX_INTERFACE *interface_ptr;
+  NX_INTERFACE *interface_ptr;
 #endif /* NX_ENABLE_VLAN */
 
   /* Default to successful return.  */
-  driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+  driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
 
 #ifdef NX_ENABLE_VLAN
-    /* Let link layer to preprocess the driver request and return actual interface.  */
+  /* Let link layer to preprocess the driver request and return actual interface.  */
   if (nx_link_driver_request_preprocess(driver_req_ptr, &interface_ptr) != NX_SUCCESS)
   {
-      driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
-      return;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
+    return;
   }
 #endif /* NX_ENABLE_VLAN */
 
   /* Process according to the driver request type in the IP control
   block.  */
-  switch (driver_req_ptr -> nx_ip_driver_command)
+  switch (driver_req_ptr->nx_ip_driver_command)
   {
 
   case NX_LINK_INTERFACE_ATTACH:
@@ -179,29 +176,28 @@ NX_INTERFACE *interface_ptr;
     break;
 
   case NX_LINK_INITIALIZE:
-    {
+  {
 
-      /* Process link initialize requests.  */
-      _nx_driver_initialize(driver_req_ptr);
-      break;
-    }
+    /* Process link initialize requests.  */
+    _nx_driver_initialize(driver_req_ptr);
+    break;
+  }
 
   case NX_LINK_ENABLE:
-    {
+  {
 
-      /* Process link enable requests.  */
-      _nx_driver_enable(driver_req_ptr);
-      break;
-    }
+    /* Process link enable requests.  */
+    _nx_driver_enable(driver_req_ptr);
+    break;
+  }
 
   case NX_LINK_DISABLE:
-    {
+  {
 
-      /* Process link disable requests.  */
-      _nx_driver_disable(driver_req_ptr);
-      break;
-    }
-
+    /* Process link disable requests.  */
+    _nx_driver_disable(driver_req_ptr);
+    break;
+  }
 
   case NX_LINK_ARP_SEND:
   case NX_LINK_ARP_RESPONSE_SEND:
@@ -209,80 +205,74 @@ NX_INTERFACE *interface_ptr;
   case NX_LINK_RARP_SEND:
   case NX_LINK_PACKET_SEND:
   case NX_LINK_RAW_PACKET_SEND:
-    {
+  {
 
-      /* Process packet send requests.  */
-      _nx_driver_packet_send(driver_req_ptr);
-      break;
-    }
-
+    /* Process packet send requests.  */
+    _nx_driver_packet_send(driver_req_ptr);
+    break;
+  }
 
   case NX_LINK_MULTICAST_JOIN:
-    {
+  {
 
-      /* Process multicast join requests.  */
-      _nx_driver_multicast_join(driver_req_ptr);
-      break;
-    }
-
+    /* Process multicast join requests.  */
+    _nx_driver_multicast_join(driver_req_ptr);
+    break;
+  }
 
   case NX_LINK_MULTICAST_LEAVE:
-    {
+  {
 
-      /* Process multicast leave requests.  */
-      _nx_driver_multicast_leave(driver_req_ptr);
-      break;
-    }
+    /* Process multicast leave requests.  */
+    _nx_driver_multicast_leave(driver_req_ptr);
+    break;
+  }
 
   case NX_LINK_GET_STATUS:
-    {
+  {
 
-      /* Process get status requests.  */
-      _nx_driver_get_status(driver_req_ptr);
-      break;
-    }
+    /* Process get status requests.  */
+    _nx_driver_get_status(driver_req_ptr);
+    break;
+  }
 
   case NX_LINK_DEFERRED_PROCESSING:
-    {
+  {
 
-      /* Process driver deferred requests.  */
+    /* Process driver deferred requests.  */
 
-      /* Process a device driver function on behave of the IP thread. */
-      _nx_driver_deferred_processing(driver_req_ptr);
+    /* Process a device driver function on behave of the IP thread. */
+    _nx_driver_deferred_processing(driver_req_ptr);
 
-      break;
-    }
-
+    break;
+  }
 
 #ifdef NX_ENABLE_INTERFACE_CAPABILITY
   case NX_INTERFACE_CAPABILITY_GET:
-    {
+  {
 
-      /* Process get capability requests.  */
-      _nx_driver_capability_get(driver_req_ptr);
-      break;
-    }
+    /* Process get capability requests.  */
+    _nx_driver_capability_get(driver_req_ptr);
+    break;
+  }
 
   case NX_INTERFACE_CAPABILITY_SET:
-    {
+  {
 
-      /* Process set capability requests.  */
-      _nx_driver_capability_set(driver_req_ptr);
-      break;
-    }
+    /* Process set capability requests.  */
+    _nx_driver_capability_set(driver_req_ptr);
+    break;
+  }
 #endif /* NX_ENABLE_INTERFACE_CAPABILITY */
 
   default:
 
-
     /* Invalid driver request.  */
 
     /* Return the unhandled command status.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_UNHANDLED_COMMAND;
-
+    driver_req_ptr->nx_ip_driver_status = NX_UNHANDLED_COMMAND;
   }
 }
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -324,22 +314,20 @@ NX_INTERFACE *interface_ptr;
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static VOID  _nx_driver_interface_attach(NX_IP_DRIVER *driver_req_ptr)
+static VOID _nx_driver_interface_attach(NX_IP_DRIVER *driver_req_ptr)
 {
-
 
   /* Setup the driver's interface.  This example is for a simple one-interface
   Ethernet driver. Additional logic is necessary for multiple port devices.  */
-  nx_driver_information.nx_driver_information_interface =  driver_req_ptr -> nx_ip_driver_interface;
+  nx_driver_information.nx_driver_information_interface = driver_req_ptr->nx_ip_driver_interface;
 
 #ifdef NX_ENABLE_INTERFACE_CAPABILITY
-  driver_req_ptr -> nx_ip_driver_interface -> nx_interface_capability_flag = NX_DRIVER_CAPABILITY;
+  driver_req_ptr->nx_ip_driver_interface->nx_interface_capability_flag = NX_DRIVER_CAPABILITY;
 #endif /* NX_ENABLE_INTERFACE_CAPABILITY */
 
   /* Return successful status.  */
-  driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+  driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
 }
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -383,31 +371,31 @@ static VOID  _nx_driver_interface_attach(NX_IP_DRIVER *driver_req_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static VOID  _nx_driver_initialize(NX_IP_DRIVER *driver_req_ptr)
+static VOID _nx_driver_initialize(NX_IP_DRIVER *driver_req_ptr)
 {
 
-  NX_IP           *ip_ptr;
-  NX_INTERFACE    *interface_ptr;
-  UINT            status;
-  CHAR           *payload_address;       /* Address of the first payload*/
-  VOID           *rounded_pool_start;    /* Rounded stating address     */
+  NX_IP *ip_ptr;
+  NX_INTERFACE *interface_ptr;
+  UINT status;
+  CHAR *payload_address;    /* Address of the first payload*/
+  VOID *rounded_pool_start; /* Rounded stating address     */
 
   /* Setup the IP pointer from the driver request.  */
-  ip_ptr =  driver_req_ptr -> nx_ip_driver_ptr;
+  ip_ptr = driver_req_ptr->nx_ip_driver_ptr;
 
   /* Setup interface pointer.  */
-  interface_ptr = driver_req_ptr -> nx_ip_driver_interface;
+  interface_ptr = driver_req_ptr->nx_ip_driver_interface;
 
   /* Initialize the driver's information structure.  */
 
   /* Default IP pointer to NULL.  */
-  nx_driver_information.nx_driver_information_ip_ptr =               NX_NULL;
+  nx_driver_information.nx_driver_information_ip_ptr = NX_NULL;
 
   /* Setup the driver state to not initialized.  */
-  nx_driver_information.nx_driver_information_state =                NX_DRIVER_STATE_NOT_INITIALIZED;
+  nx_driver_information.nx_driver_information_state = NX_DRIVER_STATE_NOT_INITIALIZED;
 
   /* Setup the default packet pool for the driver's received packets.  */
-  nx_driver_information.nx_driver_information_packet_pool_ptr = ip_ptr -> nx_ip_default_packet_pool;
+  nx_driver_information.nx_driver_information_packet_pool_ptr = ip_ptr->nx_ip_default_packet_pool;
 
   /* Get the rounded start pool start. */
   rounded_pool_start = nx_driver_information.nx_driver_information_packet_pool_ptr->nx_packet_pool_start;
@@ -416,16 +404,16 @@ static VOID  _nx_driver_initialize(NX_IP_DRIVER *driver_req_ptr)
   payload_address = (CHAR *)((ALIGN_TYPE)rounded_pool_start + sizeof(NX_PACKET));
 
   /* Align the address of payload. */
-  payload_address = (CHAR *)((((ALIGN_TYPE)payload_address + NX_PACKET_ALIGNMENT  - 1) / NX_PACKET_ALIGNMENT) * NX_PACKET_ALIGNMENT);
+  payload_address = (CHAR *)((((ALIGN_TYPE)payload_address + NX_PACKET_ALIGNMENT - 1) / NX_PACKET_ALIGNMENT) * NX_PACKET_ALIGNMENT);
 
   /* Calculate the header size. */
   header_size = (ULONG)((ALIGN_TYPE)payload_address - (ALIGN_TYPE)rounded_pool_start);
 
   /* Clear the deferred events for the driver.  */
-  nx_driver_information.nx_driver_information_deferred_events =       0;
+  nx_driver_information.nx_driver_information_deferred_events = 0;
 
   /* Call the hardware-specific ethernet controller initialization.  */
-  status =  _nx_driver_hardware_initialize(driver_req_ptr);
+  status = _nx_driver_hardware_initialize(driver_req_ptr);
 
   /* Determine if the request was successful.  */
   if (status == NX_SUCCESS)
@@ -434,38 +422,37 @@ static VOID  _nx_driver_initialize(NX_IP_DRIVER *driver_req_ptr)
     /* Successful hardware initialization.  */
 
     /* Setup driver information to point to IP pointer.  */
-    nx_driver_information.nx_driver_information_ip_ptr = driver_req_ptr -> nx_ip_driver_ptr;
+    nx_driver_information.nx_driver_information_ip_ptr = driver_req_ptr->nx_ip_driver_ptr;
 
     /* Setup the link maximum transfer unit. */
-    interface_ptr -> nx_interface_ip_mtu_size =  NX_DRIVER_ETHERNET_MTU - NX_DRIVER_ETHERNET_FRAME_SIZE;
+    interface_ptr->nx_interface_ip_mtu_size = NX_DRIVER_ETHERNET_MTU - NX_DRIVER_ETHERNET_FRAME_SIZE;
 
     /* Setup the physical address of this IP instance.  Increment the
     physical address lsw to simulate multiple nodes hanging on the
     ethernet.  */
-    interface_ptr -> nx_interface_physical_address_msw =
-      (ULONG)(( eth_handle.Init.MACAddr[0] << 8) | ( eth_handle.Init.MACAddr[1]));
-    interface_ptr -> nx_interface_physical_address_lsw =
-      (ULONG)(( eth_handle.Init.MACAddr[2] << 24) | ( eth_handle.Init.MACAddr[3] << 16) |
-              ( eth_handle.Init.MACAddr[4] << 8) | ( eth_handle.Init.MACAddr[5]));
+    interface_ptr->nx_interface_physical_address_msw =
+        (ULONG)((eth_handle.Init.MACAddr[0] << 8) | (eth_handle.Init.MACAddr[1]));
+    interface_ptr->nx_interface_physical_address_lsw =
+        (ULONG)((eth_handle.Init.MACAddr[2] << 24) | (eth_handle.Init.MACAddr[3] << 16) |
+                (eth_handle.Init.MACAddr[4] << 8) | (eth_handle.Init.MACAddr[5]));
 
     /* Indicate to the IP software that IP to physical mapping
     is required.  */
-    interface_ptr -> nx_interface_address_mapping_needed =  NX_TRUE;
+    interface_ptr->nx_interface_address_mapping_needed = NX_TRUE;
 
     /* Move the driver's state to initialized.  */
     nx_driver_information.nx_driver_information_state = NX_DRIVER_STATE_INITIALIZED;
 
     /* Indicate successful initialize.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+    driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
   }
   else
   {
 
     /* Initialization failed.  Indicate that the request failed.  */
-    driver_req_ptr -> nx_ip_driver_status =   NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
   }
 }
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -509,54 +496,55 @@ static VOID  _nx_driver_initialize(NX_IP_DRIVER *driver_req_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static VOID  _nx_driver_enable(NX_IP_DRIVER *driver_req_ptr)
+static VOID _nx_driver_enable(NX_IP_DRIVER *driver_req_ptr)
 {
 
-  NX_IP           *ip_ptr;
+  NX_IP *ip_ptr;
   ETH_MACConfigTypeDef MACConf;
-  UINT            status, duplex, speed = 0;
-  INT             PHYLinkState;
+  UINT status, duplex, speed = 0;
+  INT PHYLinkState;
   uint32_t tickstart;
 
   /* Setup the IP pointer from the driver request.  */
-  ip_ptr =  driver_req_ptr -> nx_ip_driver_ptr;
+  ip_ptr = driver_req_ptr->nx_ip_driver_ptr;
 
   /* See if we can honor the NX_LINK_ENABLE request.  */
   if (nx_driver_information.nx_driver_information_state < NX_DRIVER_STATE_INITIALIZED)
   {
 
     /* Mark the request as not successful.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
     return;
   }
 
   /* Check if it is enabled by someone already */
-  if (nx_driver_information.nx_driver_information_state >=  NX_DRIVER_STATE_LINK_ENABLED)
+  if (nx_driver_information.nx_driver_information_state >= NX_DRIVER_STATE_LINK_ENABLED)
   {
 
     /* Yes, the request has already been made.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_ALREADY_ENABLED;
+    driver_req_ptr->nx_ip_driver_status = NX_ALREADY_ENABLED;
     return;
   }
 
   if (nx_eth_phy_init() != ETH_PHY_STATUS_OK)
   {
-    driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
     return;
   }
 
   tickstart = HAL_GetTick();
 
-  do{
+  do
+  {
 
     PHYLinkState = nx_eth_phy_get_link_state();
 
-  }while((PHYLinkState <= ETH_PHY_STATUS_LINK_DOWN) && ((HAL_GetTick() - tickstart) < PHY_LINK_TIMEOUT));
+  } while ((PHYLinkState <= ETH_PHY_STATUS_LINK_DOWN) && ((HAL_GetTick() - tickstart) < PHY_LINK_TIMEOUT));
 
   /* Get link state */
-  if(PHYLinkState <= ETH_PHY_STATUS_LINK_DOWN)
+  if (PHYLinkState <= ETH_PHY_STATUS_LINK_DOWN)
   {
-    driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
     return;
   }
   else
@@ -573,7 +561,7 @@ static VOID  _nx_driver_enable(NX_IP_DRIVER *driver_req_ptr)
       speed = ETH_SPEED_1000M;
       break;
 #endif
-case ETH_PHY_STATUS_100MBITS_FULLDUPLEX:
+    case ETH_PHY_STATUS_100MBITS_FULLDUPLEX:
       duplex = ETH_FULLDUPLEX_MODE;
       speed = ETH_SPEED_100M;
       break;
@@ -600,16 +588,16 @@ case ETH_PHY_STATUS_100MBITS_FULLDUPLEX:
     MACConf.DuplexMode = duplex;
     MACConf.Speed = speed;
 #if defined(ETH_DMASBMR_BLEN4) /* ETH AXI support*/
-if (speed == ETH_SPEED_1000M)
-    MACConf.PortSelect = DISABLE;
-else
-    MACConf.PortSelect = ENABLE;
+    if (speed == ETH_SPEED_1000M)
+      MACConf.PortSelect = DISABLE;
+    else
+      MACConf.PortSelect = ENABLE;
 #endif
     HAL_ETH_SetMACConfig(&eth_handle, &MACConf);
   }
 
   /* Call hardware specific enable.  */
-  status =  _nx_driver_hardware_enable(driver_req_ptr);
+  status = _nx_driver_hardware_enable(driver_req_ptr);
 
   /* Was the hardware enable successful?  */
   if (status == NX_SUCCESS)
@@ -619,19 +607,18 @@ else
     nx_driver_information.nx_driver_information_state = NX_DRIVER_STATE_LINK_ENABLED;
 
     /* Mark request as successful.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+    driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
 
     /* Mark the IP instance as link up.  */
-    ip_ptr -> nx_ip_driver_link_up =  NX_TRUE;
+    ip_ptr->nx_ip_driver_link_up = NX_TRUE;
   }
   else
   {
 
     /* Enable failed.  Indicate that the request failed.  */
-    driver_req_ptr -> nx_ip_driver_status =   NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
   }
 }
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -675,49 +662,47 @@ else
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static VOID  _nx_driver_disable(NX_IP_DRIVER *driver_req_ptr)
+static VOID _nx_driver_disable(NX_IP_DRIVER *driver_req_ptr)
 {
 
-  NX_IP           *ip_ptr;
-  UINT            status;
-
+  NX_IP *ip_ptr;
+  UINT status;
 
   /* Setup the IP pointer from the driver request.  */
-  ip_ptr =  driver_req_ptr -> nx_ip_driver_ptr;
+  ip_ptr = driver_req_ptr->nx_ip_driver_ptr;
 
   /* Check if the link is enabled.  */
-  if (nx_driver_information.nx_driver_information_state !=  NX_DRIVER_STATE_LINK_ENABLED)
+  if (nx_driver_information.nx_driver_information_state != NX_DRIVER_STATE_LINK_ENABLED)
   {
 
     /* The link is not enabled, so just return an error.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
     return;
   }
 
   /* Call hardware specific disable.  */
-  status =  _nx_driver_hardware_disable(driver_req_ptr);
+  status = _nx_driver_hardware_disable(driver_req_ptr);
 
   /* Was the hardware disable successful?  */
   if (status == NX_SUCCESS)
   {
 
     /* Mark the IP instance as link down.  */
-    ip_ptr -> nx_ip_driver_link_up =  NX_FALSE;
+    ip_ptr->nx_ip_driver_link_up = NX_FALSE;
 
     /* Update the driver state back to initialized.  */
-    nx_driver_information.nx_driver_information_state =  NX_DRIVER_STATE_INITIALIZED;
+    nx_driver_information.nx_driver_information_state = NX_DRIVER_STATE_INITIALIZED;
 
     /* Mark request as successful.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+    driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
   }
   else
   {
 
     /* Disable failed, return an error.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
   }
 }
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -762,169 +747,168 @@ static VOID  _nx_driver_disable(NX_IP_DRIVER *driver_req_ptr)
 /*                                                                        */
 /**************************************************************************/
 #ifdef MULTI_QUEUE_FEATURE
-static VOID  _nx_driver_packet_send(NX_IP_DRIVER *driver_req_ptr)
+static VOID _nx_driver_packet_send(NX_IP_DRIVER *driver_req_ptr)
 {
 
-NX_PACKET *packet_ptr;
-UINT       status;
-USHORT     ether_type;
-NX_INTERFACE
-          *interface_ptr;
-
-    /* Check to make sure the link is up.  */
-    if (nx_driver_information.nx_driver_information_state != NX_DRIVER_STATE_LINK_ENABLED)
-    {
-
-        /* Inidate an unsuccessful packet send.  */
-        driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
-
-        /* Link is not up, simply free the packet.  */
-        nx_packet_transmit_release(driver_req_ptr -> nx_ip_driver_packet);
-        return;
-    }
-
-    interface_ptr = driver_req_ptr -> nx_ip_driver_interface;
-
-    /* Process driver send packet.  */
-
-    /* Place the ethernet frame at the front of the packet.  */
-    packet_ptr =  driver_req_ptr -> nx_ip_driver_packet;
-
-    if (driver_req_ptr -> nx_ip_driver_command != NX_LINK_RAW_PACKET_SEND)
-    {
-
-        /* Get Ethernet type.  */
-        switch (driver_req_ptr -> nx_ip_driver_command)
-        {
-        case NX_LINK_ARP_SEND:
-        case NX_LINK_ARP_RESPONSE_SEND:
-        {
-            ether_type = NX_DRIVER_ETHERNET_ARP;
-            break;
-        }
-        case NX_LINK_RARP_SEND:
-        {
-            ether_type = NX_DRIVER_ETHERNET_RARP;
-            break;
-        }
-        default:
-        {
-            if (packet_ptr -> nx_packet_ip_version == 4)
-            {
-                ether_type = NX_DRIVER_ETHERNET_IP;
-            }
-            else
-            {
-                ether_type = NX_DRIVER_ETHERNET_IPV6;
-            }
-            break;
-        }
-        }
-
-        /* Add Ethernet header.  */
-        if (nx_link_ethernet_header_add(nx_driver_information.nx_driver_information_ip_ptr,
-                                        interface_ptr -> nx_interface_index,
-                                        packet_ptr,
-                                        driver_req_ptr -> nx_ip_driver_physical_address_msw,
-                                        driver_req_ptr -> nx_ip_driver_physical_address_lsw,
-                                        ether_type))
-        {
-
-            /* Release the packet.  */
-            nx_packet_transmit_release(packet_ptr);
-            return;
-        }
-    }
-
-    /* Transmit the packet through the Ethernet controller low level access routine. */
-    status = _nx_driver_hardware_packet_send(packet_ptr);
-
-    /* Determine if there was an error.  */
-    if (status != NX_SUCCESS)
-    {
-
-        /* Driver's hardware send packet routine failed to send the packet.  */
-
-        /* Remove the Ethernet header.  */
-        NX_DRIVER_ETHERNET_HEADER_REMOVE(packet_ptr);
-
-        /* Indicate an unsuccessful packet send.  */
-        driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
-
-        /* Link is not up, simply free the packet.  */
-        nx_packet_transmit_release(packet_ptr);
-    }
-    else
-    {
-
-        /* Set the status of the request.  */
-        driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
-    }
-}
-#else
-static VOID  _nx_driver_packet_send(NX_IP_DRIVER *driver_req_ptr)
-{
-
-  NX_IP           *ip_ptr;
-  NX_PACKET       *packet_ptr;
-  ULONG           *ethernet_frame_ptr;
-  UINT            status;
-
-
-  /* Setup the IP pointer from the driver request.  */
-  ip_ptr =  driver_req_ptr -> nx_ip_driver_ptr;
+  NX_PACKET *packet_ptr;
+  UINT status;
+  USHORT ether_type;
+  NX_INTERFACE
+  *interface_ptr;
 
   /* Check to make sure the link is up.  */
   if (nx_driver_information.nx_driver_information_state != NX_DRIVER_STATE_LINK_ENABLED)
   {
 
     /* Inidate an unsuccessful packet send.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
 
     /* Link is not up, simply free the packet.  */
-    nx_packet_transmit_release(driver_req_ptr -> nx_ip_driver_packet);
+    nx_packet_transmit_release(driver_req_ptr->nx_ip_driver_packet);
+    return;
+  }
+
+  interface_ptr = driver_req_ptr->nx_ip_driver_interface;
+
+  /* Process driver send packet.  */
+
+  /* Place the ethernet frame at the front of the packet.  */
+  packet_ptr = driver_req_ptr->nx_ip_driver_packet;
+
+  if (driver_req_ptr->nx_ip_driver_command != NX_LINK_RAW_PACKET_SEND)
+  {
+
+    /* Get Ethernet type.  */
+    switch (driver_req_ptr->nx_ip_driver_command)
+    {
+    case NX_LINK_ARP_SEND:
+    case NX_LINK_ARP_RESPONSE_SEND:
+    {
+      ether_type = NX_DRIVER_ETHERNET_ARP;
+      break;
+    }
+    case NX_LINK_RARP_SEND:
+    {
+      ether_type = NX_DRIVER_ETHERNET_RARP;
+      break;
+    }
+    default:
+    {
+      if (packet_ptr->nx_packet_ip_version == 4)
+      {
+        ether_type = NX_DRIVER_ETHERNET_IP;
+      }
+      else
+      {
+        ether_type = NX_DRIVER_ETHERNET_IPV6;
+      }
+      break;
+    }
+    }
+
+    /* Add Ethernet header.  */
+    if (nx_link_ethernet_header_add(nx_driver_information.nx_driver_information_ip_ptr,
+                                    interface_ptr->nx_interface_index,
+                                    packet_ptr,
+                                    driver_req_ptr->nx_ip_driver_physical_address_msw,
+                                    driver_req_ptr->nx_ip_driver_physical_address_lsw,
+                                    ether_type))
+    {
+
+      /* Release the packet.  */
+      nx_packet_transmit_release(packet_ptr);
+      return;
+    }
+  }
+
+  /* Transmit the packet through the Ethernet controller low level access routine. */
+  status = _nx_driver_hardware_packet_send(packet_ptr);
+
+  /* Determine if there was an error.  */
+  if (status != NX_SUCCESS)
+  {
+
+    /* Driver's hardware send packet routine failed to send the packet.  */
+
+    /* Remove the Ethernet header.  */
+    NX_DRIVER_ETHERNET_HEADER_REMOVE(packet_ptr);
+
+    /* Indicate an unsuccessful packet send.  */
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
+
+    /* Link is not up, simply free the packet.  */
+    nx_packet_transmit_release(packet_ptr);
+  }
+  else
+  {
+
+    /* Set the status of the request.  */
+    driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
+  }
+}
+#else
+static VOID _nx_driver_packet_send(NX_IP_DRIVER *driver_req_ptr)
+{
+
+  NX_IP *ip_ptr;
+  NX_PACKET *packet_ptr;
+  ULONG *ethernet_frame_ptr;
+  UINT status;
+
+  /* Setup the IP pointer from the driver request.  */
+  ip_ptr = driver_req_ptr->nx_ip_driver_ptr;
+
+  /* Check to make sure the link is up.  */
+  if (nx_driver_information.nx_driver_information_state != NX_DRIVER_STATE_LINK_ENABLED)
+  {
+
+    /* Inidate an unsuccessful packet send.  */
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
+
+    /* Link is not up, simply free the packet.  */
+    nx_packet_transmit_release(driver_req_ptr->nx_ip_driver_packet);
     return;
   }
 
   /* Process driver send packet.  */
 
   /* Place the ethernet frame at the front of the packet.  */
-  packet_ptr =  driver_req_ptr -> nx_ip_driver_packet;
+  packet_ptr = driver_req_ptr->nx_ip_driver_packet;
 
   /* Adjust the prepend pointer.  */
-  packet_ptr -> nx_packet_prepend_ptr =
-    packet_ptr -> nx_packet_prepend_ptr - NX_DRIVER_ETHERNET_FRAME_SIZE;
+  packet_ptr->nx_packet_prepend_ptr =
+      packet_ptr->nx_packet_prepend_ptr - NX_DRIVER_ETHERNET_FRAME_SIZE;
 
   /* Adjust the packet length.  */
-  packet_ptr -> nx_packet_length = packet_ptr -> nx_packet_length + NX_DRIVER_ETHERNET_FRAME_SIZE;
+  packet_ptr->nx_packet_length = packet_ptr->nx_packet_length + NX_DRIVER_ETHERNET_FRAME_SIZE;
 
   /* Setup the ethernet frame pointer to build the ethernet frame.  Backup another 2
-  * bytes to get 32-bit word alignment.  */
-  ethernet_frame_ptr =  (ULONG *) (packet_ptr -> nx_packet_prepend_ptr - 2);
+   * bytes to get 32-bit word alignment.  */
+  ethernet_frame_ptr = (ULONG *)(packet_ptr->nx_packet_prepend_ptr - 2);
 
   /* Set up the hardware addresses in the Ethernet header. */
-  *ethernet_frame_ptr       =  driver_req_ptr -> nx_ip_driver_physical_address_msw;
-  *(ethernet_frame_ptr + 1) =  driver_req_ptr -> nx_ip_driver_physical_address_lsw;
+  *ethernet_frame_ptr = driver_req_ptr->nx_ip_driver_physical_address_msw;
+  *(ethernet_frame_ptr + 1) = driver_req_ptr->nx_ip_driver_physical_address_lsw;
 
-  *(ethernet_frame_ptr + 2) =  (ip_ptr -> nx_ip_arp_physical_address_msw << 16) |
-    (ip_ptr -> nx_ip_arp_physical_address_lsw >> 16);
-  *(ethernet_frame_ptr + 3) =  (ip_ptr -> nx_ip_arp_physical_address_lsw << 16);
+  *(ethernet_frame_ptr + 2) = (ip_ptr->nx_ip_arp_physical_address_msw << 16) |
+                              (ip_ptr->nx_ip_arp_physical_address_lsw >> 16);
+  *(ethernet_frame_ptr + 3) = (ip_ptr->nx_ip_arp_physical_address_lsw << 16);
 
   /* Set up the frame type field in the Ethernet harder. */
-  if ((driver_req_ptr -> nx_ip_driver_command == NX_LINK_ARP_SEND)||
-      (driver_req_ptr -> nx_ip_driver_command == NX_LINK_ARP_RESPONSE_SEND))
+  if ((driver_req_ptr->nx_ip_driver_command == NX_LINK_ARP_SEND) ||
+      (driver_req_ptr->nx_ip_driver_command == NX_LINK_ARP_RESPONSE_SEND))
   {
 
     *(ethernet_frame_ptr + 3) |= NX_DRIVER_ETHERNET_ARP;
   }
-  else if(driver_req_ptr -> nx_ip_driver_command == NX_LINK_RARP_SEND)
+  else if (driver_req_ptr->nx_ip_driver_command == NX_LINK_RARP_SEND)
   {
 
     *(ethernet_frame_ptr + 3) |= NX_DRIVER_ETHERNET_RARP;
   }
 
 #ifdef FEATURE_NX_IPV6
-  else if(packet_ptr -> nx_packet_ip_version == NX_IP_VERSION_V6)
+  else if (packet_ptr->nx_packet_ip_version == NX_IP_VERSION_V6)
   {
 
     *(ethernet_frame_ptr + 3) |= NX_DRIVER_ETHERNET_IPV6;
@@ -944,7 +928,7 @@ static VOID  _nx_driver_packet_send(NX_IP_DRIVER *driver_req_ptr)
   NX_CHANGE_ULONG_ENDIAN(*(ethernet_frame_ptr + 3));
 
   /* Determine if the packet exceeds the driver's MTU.  */
-  if (packet_ptr -> nx_packet_length > NX_DRIVER_ETHERNET_MTU)
+  if (packet_ptr->nx_packet_length > NX_DRIVER_ETHERNET_MTU)
   {
 
     /* This packet exceeds the size of the driver's MTU. Simply throw it away! */
@@ -953,7 +937,7 @@ static VOID  _nx_driver_packet_send(NX_IP_DRIVER *driver_req_ptr)
     NX_DRIVER_ETHERNET_HEADER_REMOVE(packet_ptr);
 
     /* Indicate an unsuccessful packet send.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
 
     /* Link is not up, simply free the packet.  */
     nx_packet_transmit_release(packet_ptr);
@@ -973,7 +957,7 @@ static VOID  _nx_driver_packet_send(NX_IP_DRIVER *driver_req_ptr)
     NX_DRIVER_ETHERNET_HEADER_REMOVE(packet_ptr);
 
     /* Indicate an unsuccessful packet send.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
 
     /* Link is not up, simply free the packet.  */
     nx_packet_transmit_release(packet_ptr);
@@ -982,7 +966,7 @@ static VOID  _nx_driver_packet_send(NX_IP_DRIVER *driver_req_ptr)
   {
 
     /* Set the status of the request.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+    driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
   }
 }
 #endif
@@ -1029,30 +1013,28 @@ static VOID  _nx_driver_packet_send(NX_IP_DRIVER *driver_req_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static VOID  _nx_driver_multicast_join(NX_IP_DRIVER *driver_req_ptr)
+static VOID _nx_driver_multicast_join(NX_IP_DRIVER *driver_req_ptr)
 {
 
-  UINT        status;
-
+  UINT status;
 
   /* Call hardware specific multicast join function. */
-  status =  _nx_driver_hardware_multicast_join(driver_req_ptr);
+  status = _nx_driver_hardware_multicast_join(driver_req_ptr);
 
   /* Determine if there was an error.  */
   if (status != NX_SUCCESS)
   {
 
     /* Indicate an unsuccessful request.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
   }
   else
   {
 
     /* Indicate the request was successful.   */
-    driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+    driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
   }
 }
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -1097,30 +1079,28 @@ static VOID  _nx_driver_multicast_join(NX_IP_DRIVER *driver_req_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static VOID  _nx_driver_multicast_leave(NX_IP_DRIVER *driver_req_ptr)
+static VOID _nx_driver_multicast_leave(NX_IP_DRIVER *driver_req_ptr)
 {
 
-  UINT        status;
-
+  UINT status;
 
   /* Call hardware specific multicast leave function. */
-  status =  _nx_driver_hardware_multicast_leave(driver_req_ptr);
+  status = _nx_driver_hardware_multicast_leave(driver_req_ptr);
 
   /* Determine if there was an error.  */
   if (status != NX_SUCCESS)
   {
 
     /* Indicate an unsuccessful request.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
   }
   else
   {
 
     /* Indicate the request was successful.   */
-    driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+    driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
   }
 }
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -1164,30 +1144,28 @@ static VOID  _nx_driver_multicast_leave(NX_IP_DRIVER *driver_req_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static VOID  _nx_driver_get_status(NX_IP_DRIVER *driver_req_ptr)
+static VOID _nx_driver_get_status(NX_IP_DRIVER *driver_req_ptr)
 {
 
-  UINT        status;
-
+  UINT status;
 
   /* Call hardware specific get status function. */
-  status =  _nx_driver_hardware_get_status(driver_req_ptr);
+  status = _nx_driver_hardware_get_status(driver_req_ptr);
 
   /* Determine if there was an error.  */
   if (status != NX_SUCCESS)
   {
 
     /* Indicate an unsuccessful request.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
   }
   else
   {
 
     /* Indicate the request was successful.   */
-    driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+    driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
   }
 }
-
 
 #ifdef NX_ENABLE_INTERFACE_CAPABILITY
 /**************************************************************************/
@@ -1230,16 +1208,15 @@ static VOID  _nx_driver_get_status(NX_IP_DRIVER *driver_req_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static VOID  _nx_driver_capability_get(NX_IP_DRIVER *driver_req_ptr)
+static VOID _nx_driver_capability_get(NX_IP_DRIVER *driver_req_ptr)
 {
 
   /* Return the capability of the Ethernet controller.  */
-  *(driver_req_ptr -> nx_ip_driver_return_ptr) = NX_DRIVER_CAPABILITY;
+  *(driver_req_ptr->nx_ip_driver_return_ptr) = NX_DRIVER_CAPABILITY;
 
   /* Return the success status.  */
-  driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+  driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
 }
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -1281,31 +1258,29 @@ static VOID  _nx_driver_capability_get(NX_IP_DRIVER *driver_req_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static VOID  _nx_driver_capability_set(NX_IP_DRIVER *driver_req_ptr)
+static VOID _nx_driver_capability_set(NX_IP_DRIVER *driver_req_ptr)
 {
 
-  UINT        status;
-
+  UINT status;
 
   /* Call hardware specific get status function. */
-  status =  _nx_driver_hardware_capability_set(driver_req_ptr);
+  status = _nx_driver_hardware_capability_set(driver_req_ptr);
 
   /* Determine if there was an error.  */
   if (status != NX_SUCCESS)
   {
 
     /* Indicate an unsuccessful request.  */
-    driver_req_ptr -> nx_ip_driver_status =  NX_DRIVER_ERROR;
+    driver_req_ptr->nx_ip_driver_status = NX_DRIVER_ERROR;
   }
   else
   {
 
     /* Indicate the request was successful.   */
-    driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+    driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
   }
 }
 #endif /* NX_ENABLE_INTERFACE_CAPABILITY */
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -1349,73 +1324,72 @@ static VOID  _nx_driver_capability_set(NX_IP_DRIVER *driver_req_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static VOID  _nx_driver_deferred_processing(NX_IP_DRIVER *driver_req_ptr)
+static VOID _nx_driver_deferred_processing(NX_IP_DRIVER *driver_req_ptr)
 {
 
   TX_INTERRUPT_SAVE_AREA
 
-  ULONG       deferred_events;
+  ULONG deferred_events;
 #ifdef MULTI_QUEUE_FEATURE
-  ULONG       buff_in_use;
+  ULONG buff_in_use;
 #endif
   /* Disable interrupts.  */
   TX_DISABLE
 
   /* Pickup deferred events.  */
-  deferred_events =  nx_driver_information.nx_driver_information_deferred_events;
-  nx_driver_information.nx_driver_information_deferred_events =  0;
+  deferred_events = nx_driver_information.nx_driver_information_deferred_events;
+  nx_driver_information.nx_driver_information_deferred_events = 0;
 
   /* Restore interrupts.  */
   TX_RESTORE
 
 #ifdef MULTI_QUEUE_FEATURE
-    if(deferred_events & NX_DRIVER_DEFERRED_PACKET_TRANSMITTED_CH0)
+  if (deferred_events & NX_DRIVER_DEFERRED_PACKET_TRANSMITTED_CH0)
+  {
+    eth_handle.TxOpCH = ETH_DMA_CH0_IDX;
+    buff_in_use = HAL_ETH_GetTxBuffersNumber(&eth_handle);
+
+    if (buff_in_use >= NX_DRIVER_TX_RELEASE_THRESHOLD)
     {
-      eth_handle.TxOpCH = ETH_DMA_CH0_IDX;
-      buff_in_use = HAL_ETH_GetTxBuffersNumber(&eth_handle);
-
-      if (buff_in_use >= NX_DRIVER_TX_RELEASE_THRESHOLD)
-      {
-        HAL_ETH_ReleaseTxPacket(&eth_handle);
-        nx_driver_information.nx_driver_information_number_of_transmit_buffers_in_use[ETH_DMA_CH0_IDX] = buff_in_use;
-
-      }
-    }
-
-    if(deferred_events & NX_DRIVER_DEFERRED_PACKET_TRANSMITTED_CH1)
-    {
-      eth_handle.TxOpCH = ETH_DMA_CH1_IDX;
-      buff_in_use = HAL_ETH_GetTxBuffersNumber(&eth_handle);
-
-      if (buff_in_use >= NX_DRIVER_TX_RELEASE_THRESHOLD)
-      {
-        HAL_ETH_ReleaseTxPacket(&eth_handle);
-        nx_driver_information.nx_driver_information_number_of_transmit_buffers_in_use[ETH_DMA_CH1_IDX] = buff_in_use;
+      HAL_ETH_ReleaseTxPacket(&eth_handle);
+      nx_driver_information.nx_driver_information_number_of_transmit_buffers_in_use[ETH_DMA_CH0_IDX] = buff_in_use;
     }
   }
 
-  if(deferred_events & NX_DRIVER_DEFERRED_PACKET_RECEIVED_CH0)
+  if (deferred_events & NX_DRIVER_DEFERRED_PACKET_TRANSMITTED_CH1)
   {
-     eth_handle.RxOpCH = ETH_DMA_CH0_IDX;
-     _nx_driver_hardware_packet_received();
+    eth_handle.TxOpCH = ETH_DMA_CH1_IDX;
+    buff_in_use = HAL_ETH_GetTxBuffersNumber(&eth_handle);
+
+    if (buff_in_use >= NX_DRIVER_TX_RELEASE_THRESHOLD)
+    {
+      HAL_ETH_ReleaseTxPacket(&eth_handle);
+      nx_driver_information.nx_driver_information_number_of_transmit_buffers_in_use[ETH_DMA_CH1_IDX] = buff_in_use;
+    }
   }
 
-  if(deferred_events & NX_DRIVER_DEFERRED_PACKET_RECEIVED_CH1)
+  if (deferred_events & NX_DRIVER_DEFERRED_PACKET_RECEIVED_CH0)
   {
-     eth_handle.RxOpCH = ETH_DMA_CH1_IDX;
-     _nx_driver_hardware_packet_received();
+    eth_handle.RxOpCH = ETH_DMA_CH0_IDX;
+    _nx_driver_hardware_packet_received();
+  }
+
+  if (deferred_events & NX_DRIVER_DEFERRED_PACKET_RECEIVED_CH1)
+  {
+    eth_handle.RxOpCH = ETH_DMA_CH1_IDX;
+    _nx_driver_hardware_packet_received();
   }
 
 #else
   /* Check for a transmit complete event.  */
-  if(deferred_events & NX_DRIVER_DEFERRED_PACKET_TRANSMITTED)
+  if (deferred_events & NX_DRIVER_DEFERRED_PACKET_TRANSMITTED)
   {
 
     /* Process transmitted packet(s).  */
     HAL_ETH_ReleaseTxPacket(&eth_handle);
   }
   /* Check for received packet.  */
-  if(deferred_events & NX_DRIVER_DEFERRED_PACKET_RECEIVED)
+  if (deferred_events & NX_DRIVER_DEFERRED_PACKET_RECEIVED)
   {
 
     /* Process received packet(s).  */
@@ -1423,7 +1397,7 @@ static VOID  _nx_driver_deferred_processing(NX_IP_DRIVER *driver_req_ptr)
   }
 #endif
   /* Mark request as successful.  */
-  driver_req_ptr->nx_ip_driver_status =  NX_SUCCESS;
+  driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
 }
 
 #ifdef NX_DRIVER_ENABLE_PTP
@@ -1476,15 +1450,15 @@ static VOID  _nx_driver_deferred_processing(NX_IP_DRIVER *driver_req_ptr)
 /**************************************************************************/
 static VOID _nx_driver_transfer_to_netx(NX_IP *ip_ptr, NX_PACKET *packet_ptr, ULONG *ptp_ts_ptr)
 {
-NX_LINK_TIME link_time;
+  NX_LINK_TIME link_time;
 
-    link_time.nano_second = ptp_ts_ptr[0];
-    link_time.second_high = 0;
-    link_time.second_low = ptp_ts_ptr[1];
+  link_time.nano_second = ptp_ts_ptr[0];
+  link_time.second_high = 0;
+  link_time.second_low = ptp_ts_ptr[1];
 
-    nx_link_ethernet_packet_received(ip_ptr,
-                                     nx_driver_information.nx_driver_information_interface -> nx_interface_index,
-                                     packet_ptr, &link_time);
+  nx_link_ethernet_packet_received(ip_ptr,
+                                   nx_driver_information.nx_driver_information_interface->nx_interface_index,
+                                   packet_ptr, &link_time);
 }
 #else
 /**************************************************************************/
@@ -1536,14 +1510,13 @@ NX_LINK_TIME link_time;
 static VOID _nx_driver_transfer_to_netx(NX_IP *ip_ptr, NX_PACKET *packet_ptr)
 {
 
-
   /* Set the interface for the incoming packet.  */
-  packet_ptr -> nx_packet_ip_interface = nx_driver_information.nx_driver_information_interface;
+  packet_ptr->nx_packet_ip_interface = nx_driver_information.nx_driver_information_interface;
 
   /* Pickup the packet header to determine where the packet needs to be
   sent.  */
-  packet_type =  (USHORT)(((UINT) (*(packet_ptr -> nx_packet_prepend_ptr+12))) << 8) |
-    ((UINT) (*(packet_ptr -> nx_packet_prepend_ptr+13)));
+  packet_type = (USHORT)(((UINT)(*(packet_ptr->nx_packet_prepend_ptr + 12))) << 8) |
+                ((UINT)(*(packet_ptr->nx_packet_prepend_ptr + 13)));
 
   /* Route the incoming packet according to its ethernet type.  */
   if (packet_type == NX_DRIVER_ETHERNET_IP || packet_type == NX_DRIVER_ETHERNET_IPV6)
@@ -1555,10 +1528,10 @@ static VOID _nx_driver_transfer_to_netx(NX_IP *ip_ptr, NX_PACKET *packet_ptr)
     the first 32-bit word).  */
 
     /* Clean off the Ethernet header.  */
-    packet_ptr -> nx_packet_prepend_ptr += NX_DRIVER_ETHERNET_FRAME_SIZE;
+    packet_ptr->nx_packet_prepend_ptr += NX_DRIVER_ETHERNET_FRAME_SIZE;
 
     /* Adjust the packet length.  */
-    packet_ptr -> nx_packet_length -= NX_DRIVER_ETHERNET_FRAME_SIZE;
+    packet_ptr->nx_packet_length -= NX_DRIVER_ETHERNET_FRAME_SIZE;
 
     /* Route to the ip receive function.  */
     _nx_ip_packet_deferred_receive(ip_ptr, packet_ptr);
@@ -1567,10 +1540,10 @@ static VOID _nx_driver_transfer_to_netx(NX_IP *ip_ptr, NX_PACKET *packet_ptr)
   {
 
     /* Clean off the Ethernet header.  */
-    packet_ptr -> nx_packet_prepend_ptr += NX_DRIVER_ETHERNET_FRAME_SIZE;
+    packet_ptr->nx_packet_prepend_ptr += NX_DRIVER_ETHERNET_FRAME_SIZE;
 
     /* Adjust the packet length.  */
-    packet_ptr -> nx_packet_length -= NX_DRIVER_ETHERNET_FRAME_SIZE;
+    packet_ptr->nx_packet_length -= NX_DRIVER_ETHERNET_FRAME_SIZE;
 
     /* Route to the ARP receive function.  */
     _nx_arp_packet_deferred_receive(ip_ptr, packet_ptr);
@@ -1579,10 +1552,10 @@ static VOID _nx_driver_transfer_to_netx(NX_IP *ip_ptr, NX_PACKET *packet_ptr)
   {
 
     /* Clean off the Ethernet header.  */
-    packet_ptr -> nx_packet_prepend_ptr += NX_DRIVER_ETHERNET_FRAME_SIZE;
+    packet_ptr->nx_packet_prepend_ptr += NX_DRIVER_ETHERNET_FRAME_SIZE;
 
     /* Adjust the packet length.  */
-    packet_ptr -> nx_packet_length -= NX_DRIVER_ETHERNET_FRAME_SIZE;
+    packet_ptr->nx_packet_length -= NX_DRIVER_ETHERNET_FRAME_SIZE;
 
     /* Route to the RARP receive function.  */
     _nx_rarp_packet_deferred_receive(ip_ptr, packet_ptr);
@@ -1639,14 +1612,14 @@ static VOID _nx_driver_transfer_to_netx(NX_IP *ip_ptr, NX_PACKET *packet_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static UINT  _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr)
+static UINT _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr)
 {
 #ifdef ETH_MULTIQUEUE_SUPPORTED
   uint32_t ch;
 #endif
 
   /* Default to successful return.  */
-  driver_req_ptr -> nx_ip_driver_status =  NX_SUCCESS;
+  driver_req_ptr->nx_ip_driver_status = NX_SUCCESS;
 
   /* Setup indices.  */
   nx_driver_information.nx_driver_information_receive_current_index = 0;
@@ -1668,7 +1641,7 @@ static UINT  _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr)
   {
 
     /* There must be receive packets. If not, return an error!  */
-    return(NX_DRIVER_ERROR);
+    return (NX_DRIVER_ERROR);
   }
 
 #ifdef NX_DRIVER_ETH_HW_IP_INIT
@@ -1682,7 +1655,7 @@ static UINT  _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr)
 
   /*--------------- ETHERNET DMA registers default Configuration --------------*/
 #ifdef ETH_MULTIQUEUE_SUPPORTED
-/* Common DMA configuration */
+  /* Common DMA configuration */
   dmaDefaultConf.AddressAlignedBeats = ENABLE;
   dmaDefaultConf.AXIBLENMaxSize = ETH_BLEN_MAX_SIZE_4;
   dmaDefaultConf.BurstMode = ETH_BURSTLENGTH_FIXED;
@@ -1690,7 +1663,6 @@ static UINT  _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr)
   dmaDefaultConf.TxOSRLimit = ETH_TX_OSR_LIMIT_3;
   dmaDefaultConf.TransmitArbitrationAlgorithm = ETH_DMATXARBITRATION_FIXED_PRIO;
   dmaDefaultConf.TransmitPriority = DISABLE;
-
 
   for (ch = 0; ch < ETH_DMA_CH_CNT; ch++)
   {
@@ -1732,14 +1704,14 @@ static UINT  _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr)
 
 #ifdef STM32_ETH_HAL_LEGACY
   dmaDefaultConf.DropTCPIPChecksumErrorFrame = ENABLE;
-  dmaDefaultConf.ReceiveStoreForward =  DISABLE;
-  dmaDefaultConf.TransmitStoreForward =  ENABLE;
-  dmaDefaultConf.TransmitThresholdControl =  ENABLE;
-  dmaDefaultConf.ForwardErrorFrames =  DISABLE;
-  dmaDefaultConf.ReceiveThresholdControl =  DISABLE;
-  dmaDefaultConf.SecondFrameOperate =  DISABLE;
-  dmaDefaultConf.EnhancedDescriptorFormat =  DISABLE;
-  dmaDefaultConf.DescriptorSkipLength =  DISABLE;
+  dmaDefaultConf.ReceiveStoreForward = DISABLE;
+  dmaDefaultConf.TransmitStoreForward = ENABLE;
+  dmaDefaultConf.TransmitThresholdControl = ENABLE;
+  dmaDefaultConf.ForwardErrorFrames = DISABLE;
+  dmaDefaultConf.ReceiveThresholdControl = DISABLE;
+  dmaDefaultConf.SecondFrameOperate = DISABLE;
+  dmaDefaultConf.EnhancedDescriptorFormat = DISABLE;
+  dmaDefaultConf.DescriptorSkipLength = DISABLE;
 #endif
 #endif /* ETH_MULTIQUEUE_SUPPORTED */
 
@@ -1763,16 +1735,15 @@ static UINT  _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr)
 
   /* Set Tx packet config common parameters */
   memset(&TxPacketCfg, 0, sizeof(ETH_TxPacketConfigTypeDef));
-  TxPacketCfg.Attributes = ETH_TX_PACKETS_FEATURES_CSUM ;
+  TxPacketCfg.Attributes = ETH_TX_PACKETS_FEATURES_CSUM;
   TxPacketCfg.CRCPadCtrl = ETH_CRC_PAD_DISABLE;
 
   /* Clear the number of buffers in use counter.  */
   nx_driver_information.nx_driver_information_multicast_count = 0;
 
   /* Return success!  */
-  return(NX_SUCCESS);
+  return (NX_SUCCESS);
 }
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -1813,16 +1784,15 @@ static UINT  _nx_driver_hardware_initialize(NX_IP_DRIVER *driver_req_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static UINT  _nx_driver_hardware_enable(NX_IP_DRIVER *driver_req_ptr)
+static UINT _nx_driver_hardware_enable(NX_IP_DRIVER *driver_req_ptr)
 {
 
   /* Call STM32 library to start Ethernet operation.  */
   HAL_ETH_Start_IT(&eth_handle);
 
   /* Return success!  */
-  return(NX_SUCCESS);
+  return (NX_SUCCESS);
 }
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -1867,15 +1837,14 @@ static UINT  _nx_driver_hardware_enable(NX_IP_DRIVER *driver_req_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static UINT  _nx_driver_hardware_disable(NX_IP_DRIVER *driver_req_ptr)
+static UINT _nx_driver_hardware_disable(NX_IP_DRIVER *driver_req_ptr)
 {
 
   HAL_ETH_Stop(&eth_handle);
 
   /* Return success!  */
-  return(NX_SUCCESS);
+  return (NX_SUCCESS);
 }
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -1918,37 +1887,34 @@ static UINT  _nx_driver_hardware_disable(NX_IP_DRIVER *driver_req_ptr)
 /*                                                                        */
 /**************************************************************************/
 #ifdef MULTI_QUEUE_FEATURE
-static UINT  _nx_driver_hardware_packet_send(NX_PACKET *packet_ptr)
+static UINT _nx_driver_hardware_packet_send(NX_PACKET *packet_ptr)
 {
 
-UINT status;
-UCHAR channel_number = 0;
+  UINT status;
+  UCHAR channel_number = 0;
 
-NX_INTERFACE *interface_ptr;
+  NX_INTERFACE *interface_ptr;
 
-    interface_ptr = nx_driver_information.nx_driver_information_interface;
+  interface_ptr = nx_driver_information.nx_driver_information_interface;
 
-    status = nx_shaper_hw_queue_id_get(interface_ptr,packet_ptr,&channel_number);
+  status = nx_shaper_hw_queue_id_get(interface_ptr, packet_ptr, &channel_number);
 
-    status =  _nx_driver_hardware_packet_send_distribute(packet_ptr, channel_number);
+  status = _nx_driver_hardware_packet_send_distribute(packet_ptr, channel_number);
 
- return status;
-
+  return status;
 }
 
-static UINT  _nx_driver_hardware_packet_send_distribute(NX_PACKET *packet_ptr, UINT channel_number)
+static UINT _nx_driver_hardware_packet_send_distribute(NX_PACKET *packet_ptr, UINT channel_number)
 {
-  NX_PACKET       *pktIdx;
-  UINT            buffLen = 0;
+  NX_PACKET *pktIdx;
+  UINT buffLen = 0;
   int i = 0;
-
-
 
   static ETH_BufferTypeDef Txbuffer[ETH_TX_DESC_CNT];
 
-  memset(Txbuffer, 0 , ETH_TX_DESC_CNT*sizeof(ETH_BufferTypeDef));
+  memset(Txbuffer, 0, ETH_TX_DESC_CNT * sizeof(ETH_BufferTypeDef));
 
-  for (pktIdx = packet_ptr;pktIdx != NX_NULL ; pktIdx = pktIdx -> nx_packet_next)
+  for (pktIdx = packet_ptr; pktIdx != NX_NULL; pktIdx = pktIdx->nx_packet_next)
   {
     if (i >= ETH_TX_DESC_CNT)
     {
@@ -1956,32 +1922,32 @@ static UINT  _nx_driver_hardware_packet_send_distribute(NX_PACKET *packet_ptr, U
     }
 
     Txbuffer[i].buffer = pktIdx->nx_packet_prepend_ptr;
-    Txbuffer[i].len = (pktIdx -> nx_packet_append_ptr - pktIdx->nx_packet_prepend_ptr);
-    buffLen += (pktIdx -> nx_packet_append_ptr - pktIdx->nx_packet_prepend_ptr);
+    Txbuffer[i].len = (pktIdx->nx_packet_append_ptr - pktIdx->nx_packet_prepend_ptr);
+    buffLen += (pktIdx->nx_packet_append_ptr - pktIdx->nx_packet_prepend_ptr);
 
-    if(i>0)
+    if (i > 0)
     {
-      Txbuffer[i-1].next = &Txbuffer[i];
+      Txbuffer[i - 1].next = &Txbuffer[i];
     }
 
-    if (pktIdx-> nx_packet_next ==NULL)
+    if (pktIdx->nx_packet_next == NULL)
     {
       Txbuffer[i].next = NULL;
     }
 
     i++;
-    clean_cache_by_addr((uint32_t*)(pktIdx -> nx_packet_data_start), pktIdx -> nx_packet_data_end - pktIdx -> nx_packet_data_start);
+    clean_cache_by_addr((uint32_t *)(pktIdx->nx_packet_data_start), pktIdx->nx_packet_data_end - pktIdx->nx_packet_data_start);
   }
 
 #ifdef NX_ENABLE_INTERFACE_CAPABILITY
-  if (packet_ptr -> nx_packet_interface_capability_flag & (NX_INTERFACE_CAPABILITY_TCP_TX_CHECKSUM |
-                                                           NX_INTERFACE_CAPABILITY_UDP_TX_CHECKSUM |
-                                                             NX_INTERFACE_CAPABILITY_ICMPV4_TX_CHECKSUM |
-                                                               NX_INTERFACE_CAPABILITY_ICMPV6_TX_CHECKSUM))
+  if (packet_ptr->nx_packet_interface_capability_flag & (NX_INTERFACE_CAPABILITY_TCP_TX_CHECKSUM |
+                                                         NX_INTERFACE_CAPABILITY_UDP_TX_CHECKSUM |
+                                                         NX_INTERFACE_CAPABILITY_ICMPV4_TX_CHECKSUM |
+                                                         NX_INTERFACE_CAPABILITY_ICMPV6_TX_CHECKSUM))
   {
     TxPacketCfg.ChecksumCtrl = ETH_CHECKSUM_IPHDR_PAYLOAD_INSERT_PHDR_CALC;
   }
-  else if (packet_ptr -> nx_packet_interface_capability_flag & NX_INTERFACE_CAPABILITY_IPV4_TX_CHECKSUM)
+  else if (packet_ptr->nx_packet_interface_capability_flag & NX_INTERFACE_CAPABILITY_IPV4_TX_CHECKSUM)
   {
     TxPacketCfg.ChecksumCtrl = ETH_CHECKSUM_IPHDR_INSERT;
   }
@@ -1989,10 +1955,9 @@ static UINT  _nx_driver_hardware_packet_send_distribute(NX_PACKET *packet_ptr, U
   TxPacketCfg.ChecksumCtrl = ETH_CHECKSUM_DISABLE;
 #endif /* NX_ENABLE_INTERFACE_CAPABILITY */
 
-
 #ifdef NX_DRIVER_ENABLE_PTP
   /* Enable PTP timestamp */
-  if (packet_ptr -> nx_packet_interface_capability_flag & NX_INTERFACE_CAPABILITY_PTP_TIMESTAMP)
+  if (packet_ptr->nx_packet_interface_capability_flag & NX_INTERFACE_CAPABILITY_PTP_TIMESTAMP)
   {
     HAL_ETH_PTP_InsertTxTimestamp(&eth_handle);
   }
@@ -2003,25 +1968,24 @@ static UINT  _nx_driver_hardware_packet_send_distribute(NX_PACKET *packet_ptr, U
   TxPacketCfg.TxBuffer = Txbuffer;
   TxPacketCfg.pData = (uint32_t *)packet_ptr;
 
-  if(HAL_ETH_Transmit_IT(&eth_handle, &TxPacketCfg) != HAL_OK)
+  if (HAL_ETH_Transmit_IT(&eth_handle, &TxPacketCfg) != HAL_OK)
     return NX_DRIVER_ERROR;
 
-  return  NX_SUCCESS;
+  return NX_SUCCESS;
 }
 
 #else
-static UINT  _nx_driver_hardware_packet_send(NX_PACKET *packet_ptr)
+static UINT _nx_driver_hardware_packet_send(NX_PACKET *packet_ptr)
 {
-  NX_PACKET       *pktIdx;
-  UINT            buffLen = 0;
+  NX_PACKET *pktIdx;
+  UINT buffLen = 0;
 
   static ETH_BufferTypeDef Txbuffer[ETH_TX_DESC_CNT];
-  memset(Txbuffer, 0 , ETH_TX_DESC_CNT*sizeof(ETH_BufferTypeDef));
-
+  memset(Txbuffer, 0, ETH_TX_DESC_CNT * sizeof(ETH_BufferTypeDef));
 
   int i = 0;
 
-  for (pktIdx = packet_ptr;pktIdx != NX_NULL ; pktIdx = pktIdx -> nx_packet_next)
+  for (pktIdx = packet_ptr; pktIdx != NX_NULL; pktIdx = pktIdx->nx_packet_next)
   {
     if (i >= ETH_TX_DESC_CNT)
     {
@@ -2029,32 +1993,32 @@ static UINT  _nx_driver_hardware_packet_send(NX_PACKET *packet_ptr)
     }
 
     Txbuffer[i].buffer = pktIdx->nx_packet_prepend_ptr;
-    Txbuffer[i].len = (pktIdx -> nx_packet_append_ptr - pktIdx->nx_packet_prepend_ptr);
-    buffLen += (pktIdx -> nx_packet_append_ptr - pktIdx->nx_packet_prepend_ptr);
+    Txbuffer[i].len = (pktIdx->nx_packet_append_ptr - pktIdx->nx_packet_prepend_ptr);
+    buffLen += (pktIdx->nx_packet_append_ptr - pktIdx->nx_packet_prepend_ptr);
 
-    if(i>0)
+    if (i > 0)
     {
-      Txbuffer[i-1].next = &Txbuffer[i];
+      Txbuffer[i - 1].next = &Txbuffer[i];
     }
 
-    if (pktIdx-> nx_packet_next ==NULL)
+    if (pktIdx->nx_packet_next == NULL)
     {
       Txbuffer[i].next = NULL;
     }
 
     i++;
-    clean_cache_by_addr((uint32_t*)(pktIdx -> nx_packet_data_start), pktIdx -> nx_packet_data_end - pktIdx -> nx_packet_data_start);
+    clean_cache_by_addr((uint32_t *)(pktIdx->nx_packet_data_start), pktIdx->nx_packet_data_end - pktIdx->nx_packet_data_start);
   }
 
 #ifdef NX_ENABLE_INTERFACE_CAPABILITY
-  if (packet_ptr -> nx_packet_interface_capability_flag & (NX_INTERFACE_CAPABILITY_TCP_TX_CHECKSUM |
-                                                           NX_INTERFACE_CAPABILITY_UDP_TX_CHECKSUM |
-                                                             NX_INTERFACE_CAPABILITY_ICMPV4_TX_CHECKSUM |
-                                                               NX_INTERFACE_CAPABILITY_ICMPV6_TX_CHECKSUM))
+  if (packet_ptr->nx_packet_interface_capability_flag & (NX_INTERFACE_CAPABILITY_TCP_TX_CHECKSUM |
+                                                         NX_INTERFACE_CAPABILITY_UDP_TX_CHECKSUM |
+                                                         NX_INTERFACE_CAPABILITY_ICMPV4_TX_CHECKSUM |
+                                                         NX_INTERFACE_CAPABILITY_ICMPV6_TX_CHECKSUM))
   {
     TxPacketCfg.ChecksumCtrl = ETH_CHECKSUM_IPHDR_PAYLOAD_INSERT_PHDR_CALC;
   }
-  else if (packet_ptr -> nx_packet_interface_capability_flag & NX_INTERFACE_CAPABILITY_IPV4_TX_CHECKSUM)
+  else if (packet_ptr->nx_packet_interface_capability_flag & NX_INTERFACE_CAPABILITY_IPV4_TX_CHECKSUM)
   {
     TxPacketCfg.ChecksumCtrl = ETH_CHECKSUM_IPHDR_INSERT;
   }
@@ -2064,7 +2028,7 @@ static UINT  _nx_driver_hardware_packet_send(NX_PACKET *packet_ptr)
 
 #ifdef NX_DRIVER_ENABLE_PTP
   /* Enable PTP timestamp */
-  if (packet_ptr -> nx_packet_interface_capability_flag & NX_INTERFACE_CAPABILITY_PTP_TIMESTAMP)
+  if (packet_ptr->nx_packet_interface_capability_flag & NX_INTERFACE_CAPABILITY_PTP_TIMESTAMP)
   {
     HAL_ETH_PTP_InsertTxTimestamp(&eth_handle);
   }
@@ -2074,12 +2038,12 @@ static UINT  _nx_driver_hardware_packet_send(NX_PACKET *packet_ptr)
   TxPacketCfg.TxBuffer = Txbuffer;
   TxPacketCfg.pData = (uint32_t *)packet_ptr;
 
-  if(HAL_ETH_Transmit_IT(&eth_handle, &TxPacketCfg))
+  if (HAL_ETH_Transmit_IT(&eth_handle, &TxPacketCfg))
   {
-    return(NX_DRIVER_ERROR);
+    return (NX_DRIVER_ERROR);
   }
 
-  return(NX_SUCCESS);
+  return (NX_SUCCESS);
 }
 #endif /* MULTI_QUEUE_FEATURE */
 
@@ -2123,9 +2087,8 @@ static UINT  _nx_driver_hardware_packet_send(NX_PACKET *packet_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static UINT  _nx_driver_hardware_multicast_join(NX_IP_DRIVER *driver_req_ptr)
+static UINT _nx_driver_hardware_multicast_join(NX_IP_DRIVER *driver_req_ptr)
 {
-
 
   /* Increase the multicast count.  */
   nx_driver_information.nx_driver_information_multicast_count++;
@@ -2135,7 +2098,7 @@ static UINT  _nx_driver_hardware_multicast_join(NX_IP_DRIVER *driver_req_ptr)
   HAL_ETH_SetMACFilterConfig(&eth_handle, &FilterConfig);
 
   /* Return success.  */
-  return(NX_SUCCESS);
+  return (NX_SUCCESS);
 }
 
 /**************************************************************************/
@@ -2178,7 +2141,7 @@ static UINT  _nx_driver_hardware_multicast_join(NX_IP_DRIVER *driver_req_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static UINT  _nx_driver_hardware_multicast_leave(NX_IP_DRIVER *driver_req_ptr)
+static UINT _nx_driver_hardware_multicast_leave(NX_IP_DRIVER *driver_req_ptr)
 {
 
   /* Decrease the multicast count.  */
@@ -2194,9 +2157,8 @@ static UINT  _nx_driver_hardware_multicast_leave(NX_IP_DRIVER *driver_req_ptr)
   }
 
   /* Return success.  */
-  return(NX_SUCCESS);
+  return (NX_SUCCESS);
 }
-
 
 /**************************************************************************/
 /*                                                                        */
@@ -2237,7 +2199,7 @@ static UINT  _nx_driver_hardware_multicast_leave(NX_IP_DRIVER *driver_req_ptr)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-static UINT  _nx_driver_hardware_get_status(NX_IP_DRIVER *driver_req_ptr)
+static UINT _nx_driver_hardware_get_status(NX_IP_DRIVER *driver_req_ptr)
 {
   INT PHYLinkState;
 
@@ -2245,7 +2207,7 @@ static UINT  _nx_driver_hardware_get_status(NX_IP_DRIVER *driver_req_ptr)
   PHYLinkState = nx_eth_phy_get_link_state();
 
   /* Check link status. */
-  if(PHYLinkState <= ETH_PHY_STATUS_LINK_DOWN)
+  if (PHYLinkState <= ETH_PHY_STATUS_LINK_DOWN)
   {
     /* Update Link status if physical link is down. */
     *(driver_req_ptr->nx_ip_driver_return_ptr) = NX_FALSE;
@@ -2260,9 +2222,9 @@ static UINT  _nx_driver_hardware_get_status(NX_IP_DRIVER *driver_req_ptr)
   return NX_SUCCESS;
 }
 
-void HAL_ETH_TxFreeCallback(uint32_t * buff)
+void HAL_ETH_TxFreeCallback(uint32_t *buff)
 {
-  NX_PACKET * release_packet = (NX_PACKET *) buff;
+  NX_PACKET *release_packet = (NX_PACKET *)buff;
 
   /* Remove the Ethernet header and release the packet.  */
   NX_DRIVER_ETHERNET_HEADER_REMOVE(release_packet);
@@ -2273,18 +2235,18 @@ void HAL_ETH_TxFreeCallback(uint32_t * buff)
 
 #ifdef NX_DRIVER_ENABLE_PTP
 
-void HAL_ETH_TxPtpCallback(uint32_t * buff, ETH_TimeStampTypeDef *timestamp)
+void HAL_ETH_TxPtpCallback(uint32_t *buff, ETH_TimeStampTypeDef *timestamp)
 {
   NX_PTP_TIME ts;
-  NX_PACKET * release_packet = (NX_PACKET *) buff;
+  NX_PACKET *release_packet = (NX_PACKET *)buff;
 
-  if (release_packet -> nx_packet_interface_capability_flag &
+  if (release_packet->nx_packet_interface_capability_flag &
       NX_INTERFACE_CAPABILITY_PTP_TIMESTAMP)
   {
     /* store timestamp in NX_PTP_TIME structure */
     ts.second_high = 0;
-    ts.second_low  = timestamp->TimeStampHigh;
-    ts.nanosecond  = timestamp->TimeStampLow;
+    ts.second_low = timestamp->TimeStampHigh;
+    ts.nanosecond = timestamp->TimeStampLow;
 
     /* call notification callback */
     nx_ptp_client_packet_timestamp_notify(nx_driver_information.nx_driver_ptp_ptr,
@@ -2293,12 +2255,12 @@ void HAL_ETH_TxPtpCallback(uint32_t * buff, ETH_TimeStampTypeDef *timestamp)
 }
 #endif /* NX_DRIVER_ENABLE_PTP */
 
-static VOID  _nx_driver_hardware_packet_received(VOID)
+static VOID _nx_driver_hardware_packet_received(VOID)
 {
-  NX_PACKET  *received_packet_ptr;
+  NX_PACKET *received_packet_ptr;
 
 #ifdef NX_DRIVER_ENABLE_PTP
-  ULONG      ts[2] = {0, 0};
+  ULONG ts[2] = {0, 0};
   ETH_TimeStampTypeDef timestamp;
 #endif /* NX_DRIVER_ENABLE_PTP */
 
@@ -2320,16 +2282,16 @@ static VOID  _nx_driver_hardware_packet_received(VOID)
   }
 }
 
-void HAL_ETH_RxAllocateCallback(uint8_t ** buff)
+void HAL_ETH_RxAllocateCallback(uint8_t **buff)
 {
-  NX_PACKET     *packet_ptr;
+  NX_PACKET *packet_ptr;
   if (nx_packet_allocate(nx_driver_information.nx_driver_information_packet_pool_ptr, &packet_ptr,
                          NX_RECEIVE_PACKET, NX_NO_WAIT) == NX_SUCCESS)
   {
     /* Adjust the packet.  */
-    packet_ptr -> nx_packet_prepend_ptr += 2;
-    invalidate_cache_by_addr((uint32_t*)packet_ptr -> nx_packet_data_start, packet_ptr -> nx_packet_data_end - packet_ptr -> nx_packet_data_start);
-    *buff = packet_ptr -> nx_packet_prepend_ptr;
+    packet_ptr->nx_packet_prepend_ptr += 2;
+    invalidate_cache_by_addr((uint32_t *)packet_ptr->nx_packet_data_start, packet_ptr->nx_packet_data_end - packet_ptr->nx_packet_data_start);
+    *buff = packet_ptr->nx_packet_prepend_ptr;
   }
   else
   {
@@ -2373,7 +2335,7 @@ void HAL_ETH_RxLinkCallback(void **first_packet_ptr, void **last_packet_ptr, uin
 {
   NX_PACKET **first_nx_packet_ptr = (NX_PACKET **)first_packet_ptr;
   NX_PACKET **last_nx_packet_ptr = (NX_PACKET **)last_packet_ptr;
-  NX_PACKET  *received_packet_ptr;
+  NX_PACKET *received_packet_ptr;
 
   /* Indicate the offset of the received data.  */
   uint8_t *data_buffer_ptr = buff - 2U - header_size;
@@ -2395,7 +2357,7 @@ void HAL_ETH_RxLinkCallback(void **first_packet_ptr, void **last_packet_ptr, uin
     (*last_nx_packet_ptr)->nx_packet_next = received_packet_ptr;
   }
   /* Save the current packet in order to use it in the next iteration. */
-  *last_nx_packet_ptr  = received_packet_ptr;
+  *last_nx_packet_ptr = received_packet_ptr;
 }
 
 #ifdef NX_ENABLE_INTERFACE_CAPABILITY
@@ -2445,7 +2407,6 @@ static UINT _nx_driver_hardware_capability_set(NX_IP_DRIVER *driver_req_ptr)
 }
 #endif /* NX_ENABLE_INTERFACE_CAPABILITY */
 
-
 void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *heth)
 {
 
@@ -2483,7 +2444,7 @@ void HAL_ETH_TxCpltCallback(ETH_HandleTypeDef *heth)
   if ((channel & ETH_DMA_CH1) == ETH_DMA_CH1)
     nx_driver_information.nx_driver_information_deferred_events |= NX_DRIVER_DEFERRED_PACKET_TRANSMITTED_CH1;
 #else
-    nx_driver_information.nx_driver_information_deferred_events |= NX_DRIVER_DEFERRED_PACKET_TRANSMITTED;
+  nx_driver_information.nx_driver_information_deferred_events |= NX_DRIVER_DEFERRED_PACKET_TRANSMITTED;
 #endif /* MULTI_QUEUE_FEATURE */
 
   if (!deffered_events)
@@ -2537,16 +2498,16 @@ void HAL_ETH_TxCpltCallback(ETH_HandleTypeDef *heth)
 /*                                            resulting in version 6.1    */
 /*                                                                        */
 /**************************************************************************/
-UINT adjustTime=0;
-UINT  nx_driver_ptp_clock_callback(NX_PTP_CLIENT *client_ptr, UINT operation,
-                                   NX_PTP_TIME *time_ptr, NX_PACKET *packet_ptr,
-                                   VOID *callback_data)
+UINT adjustTime = 0;
+UINT nx_driver_ptp_clock_callback(NX_PTP_CLIENT *client_ptr, UINT operation,
+                                  NX_PTP_TIME *time_ptr, NX_PACKET *packet_ptr,
+                                  VOID *callback_data)
 {
   TX_INTERRUPT_SAVE_AREA
   ULONG sec1, sec2, ns;
   ETH_TimeTypeDef time;
   uint32_t tickstart;
-  UINT NX_PTP_Status =0;
+  UINT NX_PTP_Status = 0;
   ETH_TimeTypeDef time_offset;
   static uint64_t prev_ts_time = 0;
   NX_PARAMETER_NOT_USED(callback_data);
@@ -2554,338 +2515,338 @@ UINT  nx_driver_ptp_clock_callback(NX_PTP_CLIENT *client_ptr, UINT operation,
   switch (operation)
   {
 
-    /* Save pointer to PTP client.  */
-    case NX_PTP_CLIENT_CLOCK_INIT:
-      nx_driver_information.nx_driver_ptp_ptr = client_ptr;
-      break;
+  /* Save pointer to PTP client.  */
+  case NX_PTP_CLIENT_CLOCK_INIT:
+    nx_driver_information.nx_driver_ptp_ptr = client_ptr;
+    break;
 
-    /* Set clock.  */
-    case NX_PTP_CLIENT_CLOCK_SET:
-      TX_DISABLE
+  /* Set clock.  */
+  case NX_PTP_CLIENT_CLOCK_SET:
+    TX_DISABLE
 
-      /* Get Start Tick*/
-      tickstart = HAL_GetTick();
+    /* Get Start Tick*/
+    tickstart = HAL_GetTick();
 
-      /* Wait to get PTP control or timeout occurred */
-      while (((HAL_GetTick() - tickstart) > HAL_PTP_TIMEOUT) )
+    /* Wait to get PTP control or timeout occurred */
+    while (((HAL_GetTick() - tickstart) > HAL_PTP_TIMEOUT))
+    {
+      if (__HAL_ETH_GET_PTP_CONTROL(&eth_handle, ETH_MACTSCR_TSUPDT) == 0)
       {
-        if (__HAL_ETH_GET_PTP_CONTROL(&eth_handle, ETH_MACTSCR_TSUPDT) == 0)
-        {
-          NX_PTP_Status = NX_WAIT_ERROR;
-          break;
-        }
+        NX_PTP_Status = NX_WAIT_ERROR;
+        break;
       }
+    }
 
-      time.Seconds = time_ptr -> second_low;
-      time.NanoSeconds = time_ptr -> nanosecond;
-      HAL_ETH_PTP_SetTime(&eth_handle, &time);
-      prev_ts_time =  client_ptr->nx_ptp_sync_ts.nanosecond | (uint64_t)client_ptr->nx_ptp_sync_ts.second_low<<32;
-      TX_RESTORE
-      break;
+    time.Seconds = time_ptr->second_low;
+    time.NanoSeconds = time_ptr->nanosecond;
+    HAL_ETH_PTP_SetTime(&eth_handle, &time);
+    prev_ts_time = client_ptr->nx_ptp_sync_ts.nanosecond | (uint64_t)client_ptr->nx_ptp_sync_ts.second_low << 32;
+    TX_RESTORE
+    break;
 
-    /* Extract timestamp from packet.  */
-    case NX_PTP_CLIENT_CLOCK_PACKET_TS_EXTRACT:
+  /* Extract timestamp from packet.  */
+  case NX_PTP_CLIENT_CLOCK_PACKET_TS_EXTRACT:
 
-      /* XXX second timestamp is only 32-bit */
-      time_ptr -> second_high = 0;
+    /* XXX second timestamp is only 32-bit */
+    time_ptr->second_high = 0;
 
-      /* Return timestamp stored at the beginning of the packet.  */
-      time_ptr -> nanosecond = ((ULONG *)packet_ptr -> nx_packet_data_start)[0];
-      time_ptr -> second_low = ((LONG *)packet_ptr -> nx_packet_data_start)[1];
-      break;
+    /* Return timestamp stored at the beginning of the packet.  */
+    time_ptr->nanosecond = ((ULONG *)packet_ptr->nx_packet_data_start)[0];
+    time_ptr->second_low = ((LONG *)packet_ptr->nx_packet_data_start)[1];
+    break;
 
-    /* Get clock.  */
-    case NX_PTP_CLIENT_CLOCK_GET:
-      TX_DISABLE
+  /* Get clock.  */
+  case NX_PTP_CLIENT_CLOCK_GET:
+    TX_DISABLE
 
-      HAL_ETH_PTP_GetTime(&eth_handle, &time);
-      sec1 = time.Seconds;
-      ns   = time.NanoSeconds;
-      HAL_ETH_PTP_GetTime(&eth_handle, &time);
-      sec2 = time.Seconds;
-      time_ptr -> second_high = 0;
-      /* The offset standard deviation is below 50 ns */
-      time_ptr -> second_low = ns < 500000000UL ? sec2 : sec1;
-      time_ptr -> nanosecond = (LONG)ns;
+    HAL_ETH_PTP_GetTime(&eth_handle, &time);
+    sec1 = time.Seconds;
+    ns = time.NanoSeconds;
+    HAL_ETH_PTP_GetTime(&eth_handle, &time);
+    sec2 = time.Seconds;
+    time_ptr->second_high = 0;
+    /* The offset standard deviation is below 50 ns */
+    time_ptr->second_low = ns < 500000000UL ? sec2 : sec1;
+    time_ptr->nanosecond = (LONG)ns;
 
-      TX_RESTORE
-      break;
+    TX_RESTORE
+    break;
 
-    /* Adjust clock.  */
-    case NX_PTP_CLIENT_CLOCK_ADJUST:
-      TX_DISABLE
-      time_offset.Seconds = 0;
-      adjustTime=time_ptr->nanosecond;
-      #define REFERENCE 100000000 // 100MHz
-      uint64_t ts_this = client_ptr->nx_ptp_sync_ts.nanosecond | (uint64_t)client_ptr->nx_ptp_sync_ts.second_low<<32; 
-      uint64_t ts_sub = ts_this - prev_ts_time;
-      
-      
+  /* Adjust clock.  */
+  case NX_PTP_CLIENT_CLOCK_ADJUST:
+    TX_DISABLE
+    time_offset.Seconds = 0;
+    adjustTime = time_ptr->nanosecond;
+#define REFERENCE 10 // ns
+    uint64_t ts_this = client_ptr->nx_ptp_sync_ts.nanosecond | (uint64_t)client_ptr->nx_ptp_sync_ts.second_low << 32;
+    uint64_t ts_sub = ts_this - prev_ts_time;
+    double ts_ticks = ts_sub / (double)REFERENCE;
+    double ts_adjustTicks = adjustTime / ts_ticks;
 
-      prev_ts_time = ts_this;
+    prev_ts_time = ts_this;
 
-      if(time_ptr->nanosecond < 0)
-      {
-        time_offset.NanoSeconds = - time_ptr->nanosecond;
-        HAL_ETH_PTP_AddTimeOffset(&heth, HAL_ETH_PTP_NEGATIVE_UPDATE, &time_offset);
-      }
-      else
-      {
-        time_offset.NanoSeconds = time_ptr->nanosecond;
-        HAL_ETH_PTP_AddTimeOffset(&heth, HAL_ETH_PTP_POSITIVE_UPDATE, &time_offset);
-      }
-      TX_RESTORE
+    if (time_ptr->nanosecond < 0)
+    {
+      time_offset.NanoSeconds = -time_ptr->nanosecond;
+      HAL_ETH_PTP_AddTimeOffset(&heth, HAL_ETH_PTP_NEGATIVE_UPDATE, &time_offset);
+    }
+    else
+    {
+      time_offset.NanoSeconds = time_ptr->nanosecond;
+      HAL_ETH_PTP_AddTimeOffset(&heth, HAL_ETH_PTP_POSITIVE_UPDATE, &time_offset);
+    }
+    TX_RESTORE
 
-      break;
+    break;
 
-    /* Prepare timestamp for current packet.  */
-    case NX_PTP_CLIENT_CLOCK_PACKET_TS_PREPARE:
-      packet_ptr -> nx_packet_interface_capability_flag |= NX_INTERFACE_CAPABILITY_PTP_TIMESTAMP;
-      break;
+  /* Prepare timestamp for current packet.  */
+  case NX_PTP_CLIENT_CLOCK_PACKET_TS_PREPARE:
+    packet_ptr->nx_packet_interface_capability_flag |= NX_INTERFACE_CAPABILITY_PTP_TIMESTAMP;
+    break;
 
-    /* Update soft timer. Not used by hardware callback function.  */
-    case NX_PTP_CLIENT_CLOCK_SOFT_TIMER_UPDATE:
-      break;
+  /* Update soft timer. Not used by hardware callback function.  */
+  case NX_PTP_CLIENT_CLOCK_SOFT_TIMER_UPDATE:
+    break;
 
-    default:
-      NX_PTP_Status = NX_PTP_PARAM_ERROR;
+  default:
+    NX_PTP_Status = NX_PTP_PARAM_ERROR;
   }
 
-  return(NX_PTP_Status);
+  return (NX_PTP_Status);
 }
 
 UINT nx_driver_set_timestamp_callback(USHORT type, TIMESTAMP_CALLBACK callback)
 {
-    timestamp_callback = callback;
-    packet_type = type;
+  timestamp_callback = callback;
+  packet_type = type;
 
-    return 0;
+  return 0;
 }
 #endif /* NX_DRIVER_ENABLE_PTP */
 
 #ifdef MULTI_QUEUE_FEATURE
-UINT nx_driver_shaper_config(NX_SHAPER_DRIVER_PARAMETER* parameter, UCHAR shaper_capability )
+UINT nx_driver_shaper_config(NX_SHAPER_DRIVER_PARAMETER *parameter, UCHAR shaper_capability)
 {
-UINT status;
-NX_SHAPER_HW_QUEUE hw_queue[ETH_MTL_TX_Q_CNT];
+  UINT status;
+  NX_SHAPER_HW_QUEUE hw_queue[ETH_MTL_TX_Q_CNT];
 
+  hw_queue[0].hw_queue_id = 0;
+  hw_queue[0].priority = 1;
+  hw_queue[0].type = NX_SHAPER_HW_QUEUE_NORMAL;
 
-    hw_queue[0].hw_queue_id = 0;
-    hw_queue[0].priority = 1;
-    hw_queue[0].type = NX_SHAPER_HW_QUEUE_NORMAL;
+  hw_queue[1].hw_queue_id = 1;
+  hw_queue[1].priority = 2;
+  hw_queue[1].type = NX_SHAPER_HW_QUEUE_CBS;
 
-    hw_queue[1].hw_queue_id = 1;
-    hw_queue[1].priority = 2;
-    hw_queue[1].type = NX_SHAPER_HW_QUEUE_CBS;
+  status = nx_shaper_config(parameter->nx_ip_driver_interface, PORT_RATE, shaper_capability, ETH_MTL_TX_Q_CNT, hw_queue);
 
-    status = nx_shaper_config(parameter -> nx_ip_driver_interface, PORT_RATE, shaper_capability,ETH_MTL_TX_Q_CNT, hw_queue);
-
-    return status;
+  return status;
 }
 #endif /* MULTI_QUEUE_FEATURE */
 #ifdef NX_DRIVER_ENABLE_CBS
 UINT nx_driver_shaper_cbs_entry(NX_SHAPER_DRIVER_PARAMETER *parameter)
 {
-UCHAR shaper_capability;
-UINT status = NX_SUCCESS;
-NX_SHAPER_CBS_PARAMETER * cbs_parameter;
-ETH_CBSConfigTypeDef cbsconf;
-unsigned int idle_slope;
+  UCHAR shaper_capability;
+  UINT status = NX_SUCCESS;
+  NX_SHAPER_CBS_PARAMETER *cbs_parameter;
+  ETH_CBSConfigTypeDef cbsconf;
+  unsigned int idle_slope;
 
-    switch (parameter->nx_shaper_driver_command)
-    {
-        case NX_SHAPER_COMMAND_INIT:
+  switch (parameter->nx_shaper_driver_command)
+  {
+  case NX_SHAPER_COMMAND_INIT:
 
-            break;
+    break;
 
-        case NX_SHAPER_COMMAND_CONFIG:
+  case NX_SHAPER_COMMAND_CONFIG:
 
-            shaper_capability =  NX_SHAPER_CAPABILITY_CBS_SUPPORTED;
+    shaper_capability = NX_SHAPER_CAPABILITY_CBS_SUPPORTED;
 
-            nx_driver_shaper_config(parameter,shaper_capability);
+    nx_driver_shaper_config(parameter, shaper_capability);
 
-            break;
+    break;
 
-        case NX_SHAPER_COMMAND_PARAMETER_SET:
+  case NX_SHAPER_COMMAND_PARAMETER_SET:
 
-            cbs_parameter = (NX_SHAPER_CBS_PARAMETER *)parameter -> shaper_parameter;
+    cbs_parameter = (NX_SHAPER_CBS_PARAMETER *)parameter->shaper_parameter;
 
-            idle_slope = cbs_parameter -> idle_slope * 1000000; //bit per second
+    idle_slope = cbs_parameter->idle_slope * 1000000; // bit per second
 
-            cbsconf.QueueIdx = cbs_parameter -> hw_queue_id;
-            cbsconf.SlotCount = 0;
-            cbsconf.CreditControl = 0;
-            cbsconf.IdleSlope = ((((uint64_t) idle_slope * 1024) + AVB_IDLE_SLOPE_CYCLE_FACTOR_100M - 1) / AVB_IDLE_SLOPE_CYCLE_FACTOR_100M);
-            cbsconf.SendSlope = (AVB_MAX_PORT_TRANSIT_RATE_100M - cbsconf.IdleSlope) ;
-            cbsconf.HiCredit = AVB_HI_CREDIT;
-            cbsconf.LoCredit = AVB_LO_CREDIT;
+    cbsconf.QueueIdx = cbs_parameter->hw_queue_id;
+    cbsconf.SlotCount = 0;
+    cbsconf.CreditControl = 0;
+    cbsconf.IdleSlope = ((((uint64_t)idle_slope * 1024) + AVB_IDLE_SLOPE_CYCLE_FACTOR_100M - 1) / AVB_IDLE_SLOPE_CYCLE_FACTOR_100M);
+    cbsconf.SendSlope = (AVB_MAX_PORT_TRANSIT_RATE_100M - cbsconf.IdleSlope);
+    cbsconf.HiCredit = AVB_HI_CREDIT;
+    cbsconf.LoCredit = AVB_LO_CREDIT;
 
-            /* Enable CBS feature */
-            HAL_ETHEx_EnableCBS(&heth, cbsconf.QueueIdx);
+    /* Enable CBS feature */
+    HAL_ETHEx_EnableCBS(&heth, cbsconf.QueueIdx);
 
-            /* Set CBS Configuration */
-            HAL_ETHEx_SetCBSConfig(&heth, &cbsconf);
+    /* Set CBS Configuration */
+    HAL_ETHEx_SetCBSConfig(&heth, &cbsconf);
 
-            break;
+    break;
 
-        default:
+  default:
 
-            break;
-    }
+    break;
+  }
 
-    return status;
+  return status;
 }
 #endif /* NX_DRIVER_ENABLE_CBS */
 
 #ifdef NX_DRIVER_ENABLE_FPE
 UINT nx_driver_shaper_fpe_entry(NX_SHAPER_DRIVER_PARAMETER *parameter)
 {
-NX_SHAPER_FP_PARAMETER * fpe_parameter;
-UCHAR shaper_capability;
-ETH_FPEConfigTypeDef fpeconf;
+  NX_SHAPER_FP_PARAMETER *fpe_parameter;
+  UCHAR shaper_capability;
+  ETH_FPEConfigTypeDef fpeconf;
 
-    switch (parameter->nx_shaper_driver_command)
-    {
+  switch (parameter->nx_shaper_driver_command)
+  {
 
-        case NX_SHAPER_COMMAND_INIT:
+  case NX_SHAPER_COMMAND_INIT:
 
-            /* Enable Tx Frame Preemption */
-            HAL_ETHEx_EnableFPE(&heth);
+    /* Enable Tx Frame Preemption */
+    HAL_ETHEx_EnableFPE(&heth);
 
-            break;
-        case NX_SHAPER_COMMAND_CONFIG:
+    break;
+  case NX_SHAPER_COMMAND_CONFIG:
 
-            shaper_capability =  NX_SHAPER_CAPABILITY_PREEMPTION_SUPPORTED;
+    shaper_capability = NX_SHAPER_CAPABILITY_PREEMPTION_SUPPORTED;
 
-            nx_driver_shaper_config(parameter,shaper_capability);
+    nx_driver_shaper_config(parameter, shaper_capability);
 
-            break;
-        case NX_SHAPER_COMMAND_PARAMETER_SET:
+    break;
+  case NX_SHAPER_COMMAND_PARAMETER_SET:
 
-            memset(&fpeconf,0,sizeof(ETH_FPEConfigTypeDef));
+    memset(&fpeconf, 0, sizeof(ETH_FPEConfigTypeDef));
 
-            fpe_parameter = (NX_SHAPER_FP_PARAMETER *)parameter -> shaper_parameter;
+    fpe_parameter = (NX_SHAPER_FP_PARAMETER *)parameter->shaper_parameter;
 
-            fpeconf.AdditionalFragmentSize = 0;
-            fpeconf.SendRespondmPacket = DISABLE;
-            fpeconf.SendVerifymPacket = DISABLE;
-            fpeconf.HoldReleaseStatus = 0;
-            fpeconf.PreemptionClassification = (((uint32_t)(((uint32_t)(~fpe_parameter->express_queue_bitmap))
-                                                            << ETH_MTLFPECSR_PEC_Pos)) & ETH_MTLFPECSR_PEC_Msk);
-            fpeconf.ReleaseAdvance = (fpe_parameter->ra << 16);
-            fpeconf.HoldAdvance = fpe_parameter->ha;
+    fpeconf.AdditionalFragmentSize = 0;
+    fpeconf.SendRespondmPacket = DISABLE;
+    fpeconf.SendVerifymPacket = DISABLE;
+    fpeconf.HoldReleaseStatus = 0;
+    fpeconf.PreemptionClassification = (((uint32_t)(((uint32_t)(~fpe_parameter->express_queue_bitmap))
+                                                    << ETH_MTLFPECSR_PEC_Pos)) &
+                                        ETH_MTLFPECSR_PEC_Msk);
+    fpeconf.ReleaseAdvance = (fpe_parameter->ra << 16);
+    fpeconf.HoldAdvance = fpe_parameter->ha;
 
-            HAL_ETHEx_SetFPEConfig(&heth, &fpeconf);
+    HAL_ETHEx_SetFPEConfig(&heth, &fpeconf);
 
-            break;
+    break;
 
-        default:
-          /* Wrong parameter, Disable FPE feature */
-          HAL_ETHEx_DisableFPE(&heth);
-            break;
-    }
+  default:
+    /* Wrong parameter, Disable FPE feature */
+    HAL_ETHEx_DisableFPE(&heth);
+    break;
+  }
 
-    return 0;
+  return 0;
 }
 #endif /* NX_DRIVER_ENABLE_FPE */
 
 #ifdef NX_DRIVER_ENABLE_TAS
 #ifdef NX_DRIVER_ENABLE_FPE
-void reconfig_fpe_gcl(NX_SHAPER_TAS_PARAMETER *parameter,UCHAR queue_bit)
+void reconfig_fpe_gcl(NX_SHAPER_TAS_PARAMETER *parameter, UCHAR queue_bit)
 {
-UINT i = 0;
+  UINT i = 0;
 
-    for(i=0; i < parameter->gcl_length; i++)
+  for (i = 0; i < parameter->gcl_length; i++)
+  {
+    /*queue_bit: bit=1 means express; bit =0 means preemtable*/
+    /*gata_control: 1 means open for express queue, 1 means hold(close)for express queue*/
+    if (parameter->gcl[i].operation == NX_SHAPER_GATE_OPERATION_HOLD)
     {
-        /*queue_bit: bit=1 means express; bit =0 means preemtable*/
-        /*gata_control: 1 means open for express queue, 1 means hold(close)for express queue*/
-        if(parameter->gcl[i].operation == NX_SHAPER_GATE_OPERATION_HOLD)
-        {
-            parameter->gcl[i].gate_control |= 1;
-        }
-        else if(parameter->gcl[i].operation == NX_SHAPER_GATE_OPERATION_RELEASE)
-        {
-            parameter->gcl[i].gate_control &= 0xfe;
-        }
+      parameter->gcl[i].gate_control |= 1;
     }
+    else if (parameter->gcl[i].operation == NX_SHAPER_GATE_OPERATION_RELEASE)
+    {
+      parameter->gcl[i].gate_control &= 0xfe;
+    }
+  }
 }
 #endif /* NX_DRIVER_ENABLE_FPE */
 UINT nx_driver_shaper_tas_entry(NX_SHAPER_DRIVER_PARAMETER *parameter)
 {
-UCHAR shaper_capability;
-ETH_TimeTypeDef time;
-UINT status = NX_SUCCESS;
-NX_SHAPER_TAS_PARAMETER * tas_parameter;
-UINT i;
-ETH_ESTConfigTypeDef estconfig;
-ETH_GCLConfigTypeDef* gate_ctl = &estconfig.GCLRegisters;
-ETH_TASOperationConfigTypeDef opconfig[NX_SHAPER_GCL_LENGTH_MAX];
+  UCHAR shaper_capability;
+  ETH_TimeTypeDef time;
+  UINT status = NX_SUCCESS;
+  NX_SHAPER_TAS_PARAMETER *tas_parameter;
+  UINT i;
+  ETH_ESTConfigTypeDef estconfig;
+  ETH_GCLConfigTypeDef *gate_ctl = &estconfig.GCLRegisters;
+  ETH_TASOperationConfigTypeDef opconfig[NX_SHAPER_GCL_LENGTH_MAX];
 
-    switch (parameter->nx_shaper_driver_command)
-    {
-        case NX_SHAPER_COMMAND_INIT:
-            break;
+  switch (parameter->nx_shaper_driver_command)
+  {
+  case NX_SHAPER_COMMAND_INIT:
+    break;
 
-        case NX_SHAPER_COMMAND_CONFIG:
+  case NX_SHAPER_COMMAND_CONFIG:
 
-            shaper_capability =  NX_SHAPER_CAPABILITY_TAS_SUPPORTED;
-            nx_driver_shaper_config(parameter,shaper_capability);
-            break;
+    shaper_capability = NX_SHAPER_CAPABILITY_TAS_SUPPORTED;
+    nx_driver_shaper_config(parameter, shaper_capability);
+    break;
 
-        case NX_SHAPER_COMMAND_PARAMETER_SET:
+  case NX_SHAPER_COMMAND_PARAMETER_SET:
 
-            memset(&estconfig,0,sizeof(estconfig));
+    memset(&estconfig, 0, sizeof(estconfig));
 
-            tas_parameter = (NX_SHAPER_TAS_PARAMETER *)parameter -> shaper_parameter;
+    tas_parameter = (NX_SHAPER_TAS_PARAMETER *)parameter->shaper_parameter;
 #ifdef NX_DRIVER_ENABLE_FPE
-            if(tas_parameter -> fp_parameter)
-            {
-                reconfig_fpe_gcl(tas_parameter,((NX_SHAPER_FP_PARAMETER*)tas_parameter->fp_parameter)->express_queue_bitmap);
-            }
+    if (tas_parameter->fp_parameter)
+    {
+      reconfig_fpe_gcl(tas_parameter, ((NX_SHAPER_FP_PARAMETER *)tas_parameter->fp_parameter)->express_queue_bitmap);
+    }
 #endif /* NX_DRIVER_ENABLE_FPE */
-            if (tas_parameter->gcl_length > NX_SHAPER_GCL_LENGTH_MAX)
-            {
-              status = NX_NOT_SUCCESSFUL;
-              return status;
-            }
-
-            gate_ctl -> BaseTimeRegister = tas_parameter->base_time;              /*! Base Time 32 bits seconds 32 bits nanoseconds */
-            gate_ctl-> CycleTimeRegister = tas_parameter->cycle_time;             /*! Cycle Time 32 bits seconds 32 bits nanoseconds */
-            gate_ctl->TimeExtensionRegister = tas_parameter->cycle_time_extension;  /*! Time Extension 32 bits seconds 32 bits nanoseconds */
-            gate_ctl->ListLengthRegister = tas_parameter->gcl_length;            /*! Number of entries */
-            gate_ctl->opList = opconfig;
-
-            memset(opconfig, 0, sizeof(opconfig));
-
-            for (i=0; i<gate_ctl->ListLengthRegister; i++)
-            {
-              opconfig[i].Gate = tas_parameter->gcl[i].gate_control;
-              opconfig[i].Interval = tas_parameter->gcl[i].duration;
-            }
-
-            /*we will set the value added with a micro delay */
-            if(gate_ctl->BaseTimeRegister == 0 )
-            {
-              HAL_ETH_PTP_GetTime(&heth, &time);
-              gate_ctl->BaseTimeRegister = (ULONG64)time.Seconds << 32| (ULONG64)time.NanoSeconds;
-              /*add  1 second delay from now */
-              gate_ctl->BaseTimeRegister += (ULONG64)1 << 32;
-            }
-
-            estconfig.PTPTimeOffset = PTP_REF_CLK;
-            estconfig.SwitchToSWOL = 1;
-
-            HAL_ETHEx_SetESTConfig(&heth,&estconfig);
-            break;
-
-        default:
-          /* Wrong parameter, Disable TAS feature */
-          HAL_ETHEx_DisableEST(&heth);
-
-            break;
+    if (tas_parameter->gcl_length > NX_SHAPER_GCL_LENGTH_MAX)
+    {
+      status = NX_NOT_SUCCESSFUL;
+      return status;
     }
 
-    return status;
+    gate_ctl->BaseTimeRegister = tas_parameter->base_time;                 /*! Base Time 32 bits seconds 32 bits nanoseconds */
+    gate_ctl->CycleTimeRegister = tas_parameter->cycle_time;               /*! Cycle Time 32 bits seconds 32 bits nanoseconds */
+    gate_ctl->TimeExtensionRegister = tas_parameter->cycle_time_extension; /*! Time Extension 32 bits seconds 32 bits nanoseconds */
+    gate_ctl->ListLengthRegister = tas_parameter->gcl_length;              /*! Number of entries */
+    gate_ctl->opList = opconfig;
+
+    memset(opconfig, 0, sizeof(opconfig));
+
+    for (i = 0; i < gate_ctl->ListLengthRegister; i++)
+    {
+      opconfig[i].Gate = tas_parameter->gcl[i].gate_control;
+      opconfig[i].Interval = tas_parameter->gcl[i].duration;
+    }
+
+    /*we will set the value added with a micro delay */
+    if (gate_ctl->BaseTimeRegister == 0)
+    {
+      HAL_ETH_PTP_GetTime(&heth, &time);
+      gate_ctl->BaseTimeRegister = (ULONG64)time.Seconds << 32 | (ULONG64)time.NanoSeconds;
+      /*add  1 second delay from now */
+      gate_ctl->BaseTimeRegister += (ULONG64)1 << 32;
+    }
+
+    estconfig.PTPTimeOffset = PTP_REF_CLK;
+    estconfig.SwitchToSWOL = 1;
+
+    HAL_ETHEx_SetESTConfig(&heth, &estconfig);
+    break;
+
+  default:
+    /* Wrong parameter, Disable TAS feature */
+    HAL_ETHEx_DisableEST(&heth);
+
+    break;
+  }
+
+  return status;
 }
 #endif /* NX_DRIVER_ENABLE_TAS */
 /****** DRIVER SPECIFIC ****** Start of part/vendor specific internal driver functions.  */
